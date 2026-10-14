@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>html{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>NDE Customization Layers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a working model up top (controls + inspector | mock view), reference sections below in a single reading column. */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --sunk:#e9edf2; --ink:#16202b; --muted:#566373; --line:#d6dde5;
+  --def:#7d8794; --nz:#2c56cc; --izpkg:#b8620c; --izcfg:#0f8565; --warn:#c2352b;
+  --f-display:"Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --f-body:"Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1319; --surface:#161d26; --sunk:#1d2631; --ink:#e5eaf0; --muted:#9ba7b5; --line:#2b3643;
+    --def:#8b96a3; --nz:#7596ff; --izpkg:#f0a04b; --izcfg:#3cc79d; --warn:#ff6e61; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1319; --surface:#161d26; --sunk:#1d2631; --ink:#e5eaf0; --muted:#9ba7b5; --line:#2b3643;
+  --def:#8b96a3; --nz:#7596ff; --izpkg:#f0a04b; --izcfg:#3cc79d; --warn:#ff6e61; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+.wrap{max-width:1200px;margin:0 auto;padding-inline:20px;padding-block:28px 64px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(28px,4.2vw,44px);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(21px,2.4vw,27px);font-weight:700;letter-spacing:-.01em}
+h3{font-size:16px;font-weight:700}
+p{margin:0}
+code,.mono{font-family:var(--f-mono);font-size:.86em}
+a{color:var(--nz)}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lede{max-width:68ch;color:var(--muted);font-size:16.5px}
+header.top{display:grid;gap:12px;margin-bottom:28px}
+
+/* layer colour helpers */
+.c-def{--c:var(--def)} .c-nz{--c:var(--nz)} .c-izpkg{--c:var(--izpkg)} .c-izcfg{--c:var(--izcfg)} .c-warn{--c:var(--warn)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--c);flex:none}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;
+  background:color-mix(in srgb,var(--c) 14%,transparent);color:color-mix(in srgb,var(--c) 75%,var(--ink));white-space:nowrap}
+
+/* layer chain */
+.chain{display:grid;gap:12px;margin-bottom:32px}
+.chain-row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr);gap:10px;align-items:stretch}
+.chain-box{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:var(--r);padding:16px 18px;display:grid;gap:6px;align-content:start;min-width:0}
+.chain-box .n{font:700 12px/1 var(--f-mono);letter-spacing:.06em;color:color-mix(in srgb,var(--c) 80%,var(--ink))}
+.chain-box h3{font-size:17px}
+.chain-box p{color:var(--muted);font-size:14px}
+.chain-box .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.chain-arrow{align-self:center;color:var(--muted);font-size:22px;line-height:1}
+@media (max-width:760px){.chain-row{grid-template-columns:minmax(0,1fr)}.chain-arrow{justify-self:center;transform:rotate(90deg)}}
+.chain-rule{font-weight:600;font-size:15px}
+.chain-ex{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;font-size:13.5px;color:var(--muted)}
+
+/* playground frame */
+.playground{border:2px solid color-mix(in srgb,var(--nz) 55%,var(--line));border-radius:16px;background:color-mix(in srgb,var(--nz) 6%,var(--bg));padding:18px;display:grid;gap:16px;box-shadow:0 12px 32px -20px color-mix(in srgb,var(--nz) 60%,transparent)}
+@media (max-width:600px){.playground{padding:12px;border-radius:12px}}
+.pg-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding-bottom:12px;border-bottom:1px dashed color-mix(in srgb,var(--nz) 40%,var(--line))}
+.pg-badge{display:inline-flex;align-items:center;gap:6px;background:var(--nz);color:var(--surface);font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:5px 11px;border-radius:999px}
+.pg-head h2{font-size:21px}
+.pg-head p{color:var(--muted);font-size:14px;flex:1 1 260px;min-width:0}
+.pg-reset{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 12px;border-radius:8px;cursor:pointer}
+.pg-reset:hover{border-color:var(--nz)}
+.pg-reset:focus-visible{outline:2px solid var(--nz);outline-offset:2px}
+
+/* always-on source outlines */
+.pg-toggle{font-size:13.5px;font-weight:600;align-items:center}
+.playground.outlines .region{outline:2px solid color-mix(in srgb,var(--c) 75%,transparent);outline-offset:-3px}
+.playground.outlines .region.lbl{outline-offset:2px}
+.playground.outlines .region.sel{outline:3px solid var(--c);background:color-mix(in srgb,var(--c) 9%,transparent)}
+.playground.outlines .region.warn{outline:2px solid var(--warn)}
+.playground.outlines .region.warn.sel{outline-width:3px}
+
+/* model */
+.model{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);grid-template-areas:"ctrl view" "insp view";grid-template-rows:auto 1fr;gap:20px;align-items:start}
+.model .a-ctrl{grid-area:ctrl} .model .a-view{grid-area:view} .model .a-insp{grid-area:insp}
+@media (max-width:900px){.model{grid-template-columns:minmax(0,1fr);grid-template-areas:"ctrl" "view" "insp";grid-template-rows:auto}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:grid;gap:14px;min-width:0}
+.panel h3{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 8px}
+.panel h3 small{font-weight:500;color:var(--muted);font-size:12px}
+
+.seg{display:grid;grid-template-columns:repeat(2,1fr);background:var(--sunk);border-radius:9px;padding:3px;gap:3px}
+.seg button{font:inherit;font-size:13px;font-weight:600;border:0;background:transparent;color:var(--muted);padding:8px 6px;border-radius:7px;cursor:pointer;line-height:1.25}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgb(0 0 0 / .12)}
+.seg button:focus-visible,.region:focus-visible,.switch input:focus-visible+span{outline:2px solid var(--nz);outline-offset:2px}
+.opts{display:grid;gap:8px}
+.opts .hint{font-size:13px;color:var(--muted)}
+.fixed{font-size:13px;display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:8px;background:color-mix(in srgb,var(--izpkg) 10%,transparent)}
+.fixed small{display:block;color:var(--muted);font-size:12.5px}
+.switch{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:14px}
+.switch input{position:absolute;opacity:0;width:1px;height:1px}
+.switch span.box{flex:none;width:34px;height:20px;border-radius:999px;background:var(--line);position:relative;transition:background .15s;margin-top:1px}
+.switch span.box::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:var(--surface);transition:transform .15s}
+.switch input:checked+span.box{background:var(--c,var(--nz))}
+.switch input:checked+span.box::after{transform:translateX(14px)}
+.switch small{display:block;color:var(--muted);font-size:12.5px}
+
+/* mock view */
+.viewhint{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--ink)}
+.viewhint svg{flex:none}
+.browser{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--sunk)}
+.tabbar{display:flex;align-items:center;gap:8px;padding:8px 120px 0 10px}
+.tabbar .tab{display:flex;align-items:center;gap:8px;background:var(--surface);border-radius:8px 8px 0 0;padding:7px 12px;font-size:12.5px;max-width:280px;min-width:0}
+.tab .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fav{width:16px;height:16px;border-radius:4px;flex:none;display:grid;place-items:center;font-size:9px;font-weight:800;color:#fff}
+.fav.def{background:var(--def)} .fav.loc{background:var(--izpkg)}
+.page{background:var(--surface);display:grid;gap:0}
+.region{all:unset;box-sizing:border-box;display:block;position:relative;cursor:pointer;outline:2px dashed transparent;outline-offset:-3px;border-radius:6px;transition:outline-color .15s,background .15s}
+.region::after{content:attr(data-tag);position:absolute;top:4px;right:6px;font:600 10.5px/1 var(--f-body);letter-spacing:.03em;padding:3px 6px;border-radius:999px;
+  background:var(--c);color:var(--surface);opacity:.92;pointer-events:none;white-space:nowrap}
+.region:hover,.region.sel{outline-color:var(--c);background:color-mix(in srgb,var(--c) 7%,transparent)}
+.region.sel{outline-style:solid;outline-width:3px}
+.tabbar .region::after{top:50%;right:auto;left:100%;margin-left:8px;transform:translateY(-50%)}
+.r-head .region::after{top:100%;margin-top:4px}
+.region.warn::after{background:var(--warn)}
+.region.warn{outline:2px solid var(--warn);outline-offset:-3px}
+.r-css,.r-foot,.themebtn{padding-right:120px!important}
+.r-head{display:flex;align-items:center;gap:12px;padding:12px 14px 30px;border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px;padding:6px 10px;border-radius:6px;border:1px dashed var(--line)}
+.logo.loc{border:0;background:color-mix(in srgb,var(--izpkg) 16%,transparent);color:color-mix(in srgb,var(--izpkg) 70%,var(--ink))}
+.logo.nzl{border:0;background:color-mix(in srgb,var(--nz) 14%,transparent);color:color-mix(in srgb,var(--nz) 75%,var(--ink))}
+.logo .mk{width:18px;height:18px;border-radius:4px;background:currentColor;opacity:.8}
+.menu{display:flex;gap:14px;font-size:12.5px;color:var(--muted);flex-wrap:wrap;justify-content:flex-end}
+.search{width:min(440px,100%);height:36px;border-radius:999px;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;padding:0 14px;font-size:12.5px;color:var(--muted)}
+.r-landing{display:grid}
+/* landing: configured in Alma */
+.lp{display:grid}
+.lp-banner{padding:28px 18px 26px;text-align:center;display:grid;gap:12px;justify-items:center;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--nz) 22%,var(--surface)),color-mix(in srgb,var(--nz) 6%,var(--surface)))}
+.lp-banner .hd{font-family:var(--f-display);font-weight:800;font-size:clamp(17px,2.2vw,23px)}
+.lp-body{padding:14px;display:grid;gap:10px}
+.ql{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.ql span{border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px;text-align:center}
+.ann{font-size:12.5px;border-radius:8px;padding:8px 10px;background:var(--sunk)}
+.about{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1fr);border-radius:8px;overflow:hidden;background:color-mix(in srgb,var(--nz) 8%,var(--surface));border:1px solid var(--line)}
+@media (max-width:560px){.about{grid-template-columns:minmax(0,1fr)}}
+.about-text{padding:14px 16px;display:grid;gap:6px;font-size:12.5px;text-align:left;align-content:start}
+.about-text b{font-size:14px}
+.about-text .chk{display:block;color:var(--muted)}
+.about-text .chk::before{content:"✓";margin-right:6px;color:var(--ink)}
+.about-img{min-height:90px;margin:10px;border-radius:6px;background:linear-gradient(180deg,color-mix(in srgb,var(--line) 70%,var(--surface)) 0 48%,color-mix(in srgb,#7d9a6a 30%,var(--surface)) 48% 100%)}
+/* landing: the institution's own HTML */
+.cp{display:grid;gap:0;font-family:Georgia,"Times New Roman",serif}
+.cp-hero{display:grid}
+.cp-text{padding:24px 20px;display:grid;gap:10px;align-content:center;background:var(--ink);color:var(--surface)}
+.cp-kicker{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;opacity:.7}
+.cp-h{font-size:clamp(20px,2.6vw,28px);line-height:1.1;font-weight:700}
+.cp-text .search{border-radius:4px;border:0;width:100%}
+.cp-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-bottom:1px solid var(--line)}
+@media (max-width:560px){.cp-cols{grid-template-columns:minmax(0,1fr)}}
+.cp-cols > span{display:grid;gap:4px;padding:14px 16px;font-size:13px;border-right:1px solid var(--line);align-content:start}
+.cp-cols > span:last-child{border-right:0}
+.cp-cols b{font-size:15px}
+.cp-cols i{font-style:normal;color:var(--muted);font-family:var(--f-body);font-size:12px}
+.r-result{margin:12px 14px 0;border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:grid;gap:6px}
+.r-result .ttl{font-weight:700;font-size:13.5px}
+.r-result .meta{font-size:12px;color:var(--muted)}
+.ng{display:flex;flex-wrap:wrap;gap:6px}
+.ng span{font-size:11.5px;font-weight:600;padding:4px 8px;border-radius:6px;border:1px solid var(--line)}
+.opts h5{margin:6px 0 0;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.r-css{margin:12px 14px 0;font-size:12px;color:var(--muted);padding:8px 10px}
+.r-foot{padding:14px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap;background:var(--sunk);margin-top:12px}
+.r-top{padding:10px 14px;font-size:12px;color:var(--muted);display:flex;padding-right:120px!important;border-bottom:1px solid var(--line);background:var(--sunk)}
+.r-top.none{background:transparent;border-bottom:1px dashed var(--line);font-style:italic}
+.r-foot.none{background:transparent;border-top:1px dashed var(--line);font-style:italic}
+.themebtn{display:block}
+
+/* view-wide settings */
+.meta{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:14px;display:grid;gap:10px}
+.meta-head{display:flex;justify-content:space-between;gap:4px 10px;flex-wrap:wrap;align-items:baseline}
+.meta-head b{font-size:14px}
+.meta-head small{color:var(--muted);font-size:12.5px}
+.meta-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:640px){.meta-grid{grid-template-columns:minmax(0,1fr)}}
+.region.mtile{padding:12px;padding-top:32px;border:1px solid var(--line);border-radius:8px;display:grid;gap:6px;align-content:start}
+.mtile .mt{font-weight:700;font-size:13.5px}
+.mtile .mv{font-size:12.5px;color:var(--muted)}
+.swatches{display:flex;gap:4px}
+.swatches i{width:22px;height:22px;border-radius:5px;display:block;border:1px solid var(--line)}
+
+/* label boxes inside the landing page */
+.region.lbl{display:inline-block;padding:4px 10px;outline:2px dashed color-mix(in srgb,var(--c) 60%,transparent);outline-offset:2px;border-radius:6px}
+.region.lbl.sel{outline:3px solid var(--c)}
+.region.lbl::after{top:-12px;right:-10px}
+.region.lbl.lbl-search{display:block;width:min(440px,100%);padding:0}
+.cp-text .region.lbl.lbl-search{width:100%}
+.region.lbl.lbl-search .search{width:100%}
+
+/* inspector */
+.inspector{border:2px solid var(--c);padding:0;gap:0;overflow:hidden;box-shadow:0 6px 20px -10px color-mix(in srgb,var(--c) 60%,transparent)}
+.insp-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:color-mix(in srgb,var(--c) 14%,var(--surface));font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:color-mix(in srgb,var(--c) 75%,var(--ink))}
+.insp-bar span{margin-left:auto;font-weight:500;letter-spacing:0;text-transform:none;font-size:12.5px;color:var(--muted)}
+.insp-body{padding:16px 18px 18px;display:grid;gap:12px}
+.insp-title{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-size:24px;font-weight:800;letter-spacing:-.01em;line-height:1.1}
+.insp-title .dot{width:14px;height:14px;border-radius:4px}
+.inspector dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:8px 14px;margin:0;font-size:14px}
+.inspector dt{color:var(--muted);font-size:12.5px;padding-top:2px}
+.inspector dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.inspector.flash{animation:flash .5s ease-out}
+@keyframes flash{from{box-shadow:0 0 0 6px color-mix(in srgb,var(--c) 35%,transparent)}to{box-shadow:0 6px 20px -10px color-mix(in srgb,var(--c) 60%,transparent)}}
+.alert{border-radius:8px;padding:10px 12px;font-size:13.5px;background:color-mix(in srgb,var(--c) 12%,transparent);border:1px solid color-mix(in srgb,var(--c) 40%,transparent)}
+.alert b{color:color-mix(in srgb,var(--c) 80%,var(--ink))}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+
+/* reading sections */
+section.read{margin-top:56px;display:grid;gap:18px}
+.cols2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:760px){.cols2{grid-template-columns:minmax(0,1fr)}}
+.path{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:grid;gap:12px;align-content:start;border-top:4px solid var(--c)}
+.path .tagline{color:var(--muted)}
+.path ul{margin:0;padding-left:18px;display:grid;gap:4px}
+.path h4{margin:4px 0 0;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:14px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:600;width:22%}
+
+.rule{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;background:var(--surface);border:2px solid var(--izpkg);border-radius:var(--r);padding:22px}
+@media (max-width:760px){.rule{grid-template-columns:minmax(0,1fr)}}
+.rule ol{margin:0;padding-left:20px;display:grid;gap:6px}
+pre.tree{margin:0;font-family:var(--f-mono);font-size:12.5px;line-height:1.7;background:var(--sunk);border-radius:8px;padding:14px 16px;overflow-x:auto}
+pre.tree .hl{color:var(--izpkg);font-weight:600}
+pre.tree .dim{color:var(--muted)}
+.specs{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;font-size:13.5px;margin:0}
+.specs dt{color:var(--muted)} .specs dd{margin:0}
+
+.paths{display:grid;gap:8px}
+.paths div{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:12px;padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-radius:8px;font-size:14px}
+@media (max-width:600px){.paths div{grid-template-columns:minmax(0,1fr);gap:2px}}
+.paths code{color:var(--muted)}
+.verify{display:grid;gap:10px;counter-reset:q}
+.verify li{list-style:none;background:var(--surface);border:1px dashed var(--line);border-radius:8px;padding:12px 14px;font-size:14px}
+.verify{padding:0;margin:0}
+.sources{font-size:13.5px;color:var(--muted);display:grid;gap:4px;padding-left:18px;margin:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">GO NDE · Primo VE NDE in a Network Zone</span>
+    <h1>NDE Customization Layers</h1>
+    <p class="lede">How an institution's NDE view in Oria is put together. Pick a path in the model below and click any part of the view to see where it comes from.</p>
+  </header>
+
+  <section class="chain" aria-label="The three layers">
+    <div class="chain-row">
+      <div class="chain-box c-def"><span class="n">1</span><h3>Clarivate default</h3><p>What NDE looks like out of the box.</p></div>
+      <span class="chain-arrow" aria-hidden="true">→</span>
+      <div class="chain-box c-nz"><span class="n">2</span><h3>Sikt Central Package</h3><p>Shared by every institution that inherits: Sikt logo, footer, CSS and Angular components.</p></div>
+      <span class="chain-arrow" aria-hidden="true">→</span>
+      <div class="chain-box c-izpkg"><span class="n">3</span><h3>Your institution</h3><p>Your own choices: settings in Alma, and your own Customization Package if you need one.</p><span class="chips"><span class="chip c-izcfg">Settings in Alma</span><span class="chip c-izpkg">Own package</span></span></div>
+    </div>
+    <p class="chain-rule">Each layer builds on the one before. Where two layers set the same thing, the higher number wins.</p>
+    <div class="chain-ex"><span>Example, the logo:</span><span class="chip c-def">Default logo</span><span aria-hidden="true">→</span><span class="chip c-nz">Sikt logo</span><span aria-hidden="true">→</span><span class="chip c-izpkg">Your logo</span></div>
+  </section>
+
+  <section class="playground outlines" id="playground" aria-label="Interactive model">
+    <div class="pg-head"><span class="pg-badge"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l7 17 2.5-7.5L21 11z"/></svg>Interactive model</span><h2>Try it yourself</h2><p>Switch paths and options on the left, and click any part of the view to see where it comes from.</p><label class="switch c-nz pg-toggle"><input type="checkbox" id="outlines" checked><span class="box"></span><span>Show all sources</span></label><button type="button" class="pg-reset" id="pgReset">↺ Reset</button></div>
+  <div class="model">
+    <div class="panel a-ctrl">
+      <h3>Your institution (IZ) <small>Manage Customization Package tab</small></h3>
+      <label class="switch c-nz">
+        <input type="checkbox" id="inherit" checked>
+        <span class="box"></span>
+        <span><b>Inherit from Central Package</b><small>The view receives the consortium's package and every later update to it automatically.</small></span>
+      </label>
+      <div>
+        <div class="eyebrow" style="margin-bottom:6px">How the IZ customizes on top</div>
+        <div class="seg" role="group" aria-label="Customization path">
+          <button type="button" data-path="LP" aria-pressed="true">A · Landing Page Config</button>
+          <button type="button" data-path="PKG" aria-pressed="false">B · Own package</button>
+        </div>
+      </div>
+      <div class="opts" id="optsLP">
+        <p class="hint"><b>Recommended starting point.</b> The IZ ticks <b>Enable configuration</b> on the view's Landing Page tab and sets heading, images, quick links, announcement and “About the library” in Alma. No code.</p>
+        <label class="switch c-izpkg"><input type="checkbox" id="lBrand" checked><span class="box"></span><span><b>Also upload a small package with logo &amp; favicon</b><small>Turn this off to see what happens without it.</small></span></label>
+      </div>
+      <div class="opts" id="optsPKG" hidden>
+        <p class="hint">For institutions that need more than the landing page form offers. The IZ uploads its own Customization Package.</p>
+        <div class="fixed"><i class="dot c-izpkg" style="margin-top:4px"></i><span><b>Landing page HTML is always part of it</b><small>The package's homepage files build the whole landing page. Nothing from the Landing Page tab is used.</small></span></div>
+        <p class="hint">Choose what else it contains:</p>
+        <h5>Branding</h5>
+        <label class="switch c-izpkg"><input type="checkbox" id="pBrand" checked><span class="box"></span><span>Logo &amp; favicon</span></label>
+        <h5>Styling</h5>
+        <label class="switch c-izpkg"><input type="checkbox" id="pCss" checked><span class="box"></span><span>Local CSS (<code>custom.css</code>)</span></label>
+        <label class="switch c-izpkg"><input type="checkbox" id="pTheme"><span class="box"></span><span>Own colour theme<small>An Angular Material theme built with customModule. It overrides the theme chosen in Alma.</small></span></label>
+        <h5>Content &amp; components</h5>
+        <label class="switch c-izpkg"><input type="checkbox" id="pHead"><span class="box"></span><span>Own header</span></label>
+        <label class="switch c-izpkg"><input type="checkbox" id="pFoot"><span class="box"></span><span>Own footer</span></label>
+        <label class="switch c-izpkg"><input type="checkbox" id="pNg"><span class="box"></span><span>Own Angular components (customModule)</span></label>
+      </div>
+    </div>
+
+    <div class="a-view" style="display:grid;gap:10px;min-width:0">
+      <div class="browser" aria-label="Mock NDE view">
+        <div class="tabbar">
+          <button class="region tab" data-el="favicon" type="button"><span class="fav def" id="favIcon"></span><span class="t">Library Search</span></button>
+        </div>
+        <div class="page">
+          <button class="region r-top" data-el="topheader" type="button"><span id="topTxt"></span></button>
+          <div class="r-head">
+            <button class="region" data-el="logo" type="button" style="padding:2px"><span class="logo" id="logoBox"><span class="mk"></span><span id="logoTxt">Default logo</span></span></button>
+            <button class="region" data-el="header" type="button" style="margin-left:auto;padding:6px 8px;min-width:0"><span class="menu"><span>Search</span><span>Journals</span><span>Browse</span><span>My Library Card</span></span></button>
+          </div>
+          <div class="region r-landing" data-el="landing" role="button" tabindex="0"><span id="landingBox" style="display:grid"></span></div>
+          <button class="region r-foot" data-el="footer" type="button" style="display:flex"><span id="footTxt"></span></button>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="meta-head"><b>View-wide settings</b><small>Not a place on the page. These apply across the whole view.</small></div>
+        <div class="meta-grid">
+          <button class="region mtile" data-el="angular" type="button"><span class="mt">Angular components</span><span class="mv">Shown in records, result lists and elsewhere</span><span class="ng" id="ngBox"></span></button>
+          <button class="region mtile" data-el="css" type="button"><span class="mt">CSS</span><span class="mv" id="cssTxt"></span></button>
+          <button class="region mtile" data-el="theme" type="button"><span class="mt">Colour theme</span><span class="swatches" id="swatch"></span><span class="mv" id="themeTxt"></span></button>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i class="dot c-def"></i>NDE default (Clarivate)</span>
+        <span><i class="dot c-nz"></i>Central Package (NZ)</span>
+        <span><i class="dot c-izpkg"></i>IZ Customization Package</span>
+        <span><i class="dot c-izcfg"></i>IZ settings in Alma</span>
+      </div>
+    </div>
+
+    <div class="panel inspector a-insp" id="inspector" aria-live="polite"></div>
+  </div>
+  </section>
+
+  <!-- Two paths -->
+  <section class="read">
+    <div style="display:grid;gap:8px"><span class="eyebrow">Two ways forward for an institution</span><h2>Both start from the Central Package</h2>
+      <p class="lede">Ex Libris documents that an institution can inherit from the Central Package and upload its own package at the same time. The two are combined: anything only one package defines is used, and where both define the same thing, the institution's version wins.</p></div>
+    <div class="cols2">
+      <article class="path c-izcfg">
+        <span class="chip c-izcfg">Path A · Recommended starting point</span>
+        <h3>Landing Page Configuration</h3>
+        <p class="tagline">Point-and-click setup of the landing page in Alma. Except for logo and favicon, everything else comes from the Central Package, so the view stays in step with the consortium.</p>
+        <h4>What the IZ does</h4>
+        <ul>
+          <li>Ticks <b>Enable configuration</b> on the view's Landing Page tab.</li>
+          <li>Sets heading, background and “About the library” images, quick links (label, URL, icon), element order, announcement, login box and “About the library” text.</li>
+          <li>Text is multilingual through the Labels code tables. Announcements can be switched on and off, for example over a semester break.</li>
+          <li><b>Uploads a small package with logo and favicon.</b> See the rule below.</li>
+        </ul>
+        <h4>Watch out for</h4>
+        <ul>
+          <li>The Landing Page tab only covers the landing page. Except for logo and favicon, everything else comes from the Central Package and defaults.</li>
+          <li>No custom layout. Colours come from the view's colour theme.</li>
+        </ul>
+      </article>
+      <article class="path c-izpkg">
+        <span class="chip c-izpkg">Path B</span>
+        <h3>Own Customization Package</h3>
+        <p class="tagline">Full control over the local view, with the same tools the consortium office uses. For needs the landing page form can't meet.</p>
+        <h4>What the IZ does</h4>
+        <ul>
+          <li>Starts from the starter package the consortium office provides to every institution, so nobody has to build on the template in Alma.</li>
+          <li>Adds or changes files: CSS, header, footer, landing page HTML, images, icons. The Central Package has no header, so a header is only possible this way.</li>
+          <li>Local CSS is added on top of the central CSS. Where rules conflict, the local rule wins.</li>
+          <li>Can replace the ready-made colour themes with its own Angular Material colour theme, built with <code>customModule</code>.</li>
+          <li>For new interface elements, builds Angular components with Ex Libris' <code>customModule</code> on GitHub.</li>
+          <li>Zips it as <code>&lt;institution_code&gt;-&lt;view_code&gt;</code> and uploads it to the view.</li>
+        </ul>
+        <h4>Watch out for</h4>
+        <ul>
+          <li>Needs HTML/CSS skills, and Node.js/Angular for components.</li>
+          <li>The IZ owns its code. Clarivate does not support institutions' code changes.</li>
+          <li>Anything the IZ redefines stops following central updates.</li>
+          <li>Local Angular components run alongside the consortium’s, but not if both build on the same element in the same position (before, after, top, bottom). Coordinate with the consortium office.</li>
+        </ul>
+      </article>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th></th><th>A · Landing Page Configuration</th><th>B · Own package</th></tr></thead>
+        <tbody>
+          <tr><td>Flexibility</td><td>Landing page only, within the fields Alma offers.</td><td>High. Any file in the package, plus Angular components and an own colour theme.</td></tr>
+          <tr><td>Skills needed</td><td>Alma configuration.</td><td>HTML, CSS; Node.js and Angular for components.</td></tr>
+          <tr><td>Landing page</td><td>Landing Page tab with <b>Enable configuration</b> ticked.</td><td><code>homepage_xx.html</code> and <code>homepage.css</code> in the package.</td></tr>
+          <tr><td>Logo &amp; favicon</td><td><b>Still needs a package</b> containing the two files.</td><td>In the package.</td></tr>
+          <tr><td>Central updates</td><td>Received for everything except the landing page, logo and favicon.</td><td>Received for everything the IZ has not redefined.</td></tr>
+          <tr><td>Who maintains it</td><td>The IZ, in Alma.</td><td>The IZ, including its own code.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Logo rule -->
+  <section class="read">
+    <div style="display:grid;gap:8px"><span class="eyebrow">The one rule people miss</span><h2>Your own logo and favicon always need a Customization Package</h2></div>
+    <div class="rule">
+      <div style="display:grid;gap:14px;align-content:start">
+        <p>The Landing Page tab has no field for a logo or favicon. They are read only from files in a Customization Package. An IZ on path A that wants its own logo and favicon therefore uploads a small package with these two files, starting from the consortium office’s starter package. Everything else is still inherited from the Central Package.</p>
+      </div>
+      <div style="display:grid;gap:14px;align-content:start;min-width:0">
+<pre class="tree">47BIBSYS_XXX-NDE_VIEW/
+└── assets/
+    ├── images/
+    │   └── <span class="hl">library-logo.png</span>
+    └── icons/
+        └── <span class="hl">favicon.ico</span></pre>
+        <dl class="specs">
+          <dt>Logo</dt><dd>PNG only, max 300 × 100 px, max 30 KB, original aspect ratio.</dd>
+          <dt>Favicon</dt><dd><code>favicon.ico</code> in the <code>icons</code> folder.</dd>
+          <dt>If missing</dt><dd>Logo: the Sikt logo from the Central Package when the view inherits, otherwise Clarivate’s default. Favicon: Clarivate’s default. No error message.</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- Where -->
+  <section class="read">
+    <div style="display:grid;gap:8px"><span class="eyebrow">Where things are managed</span><h2>Who does what, and where in Alma</h2></div>
+    <div class="paths">
+      <div><b><span class="chip c-nz">NZ · Consortium office</span></b><span>Central Package for NDE: <code>Configuration › Discovery › Display Configuration › Manage Customization Package</code>, section <i>NDE Central Package</i>. Folder name <code>&lt;NZ_code&gt;-CENTRAL_PACKAGE</code>. Holds the Sikt logo, shared Angular components, the footer, CSS and shared images. The consortium office also provides a starter package that institutions use as the starting point for their own package.</span></div>
+      <div><b><span class="chip c-nz">IZ · Inherit</span></b><span><code>Configure Views › [view] › Manage Customization Package</code>, tick <i>Inherit from Central Package</i>.</span></div>
+      <div><b><span class="chip c-izpkg">IZ · Own package (B)</span></b><span>Same tab, upload a ZIP in the <i>Customization Package</i> field. Start from the consortium office’s starter package.</span></div>
+      <div><b><span class="chip c-izcfg">IZ · Landing page (A)</span></b><span><code>Configure Views › [view] › Landing Page</code>, tick <i>Enable configuration</i>. Texts in <code>Display Configuration › Labels</code>.</span></div>
+      <div><b><span class="chip c-izcfg">IZ · Every view</span></b><span>Colour theme (<i>Color Theme – New UI</i> on the Manage Customization Package tab), logo link (<i>General</i> tab), page title, banner heading and search box text (Labels: <code>main.title</code>, <code>nde.landing.header</code>, <code>nui.search.placeholder</code>).</span></div>
+    </div>
+  </section>
+
+
+  <section class="read">
+    <span class="eyebrow">Sources · Ex Libris Knowledge Center, read October 2026</span>
+    <ul class="sources">
+      <li><a href="https://knowledge.exlibrisgroup.com/Primo/Product_Documentation/020Primo_VE/Primo_VE_(English)/Collaborative_Networks/0400Central_Management_in_Collaborative_Networks" target="_blank" rel="noopener">Central Management in Collaborative Networks</a> (Central Package, inheritance, precedence)</li>
+      <li><a href="https://knowledge.exlibrisgroup.com/Primo/Product_Documentation/020Primo_VE/Primo_VE_(English)/030Primo_VE_User_Interface/010NDE_UI_Customization_-_Best_Practices" target="_blank" rel="noopener">NDE UI Customization – Best Practices</a> (package structure, logo, favicon, colour theme)</li>
+      <li><a href="https://knowledge.exlibrisgroup.com/Primo/Product_Documentation/020Primo_VE/Primo_VE_(English)/Go_NDE/Overview_of_the_NDE_Interface_and_Configuration" target="_blank" rel="noopener">Overview of the NDE Interface and Configuration</a> (Landing Page tab)</li>
+      <li><a href="https://knowledge.exlibrisgroup.com/Primo/Product_Documentation/020Primo_VE/Primo_VE_(English)/Go_NDE/Customization_Best_Practices" target="_blank" rel="noopener">Go NDE: Customization Best Practices</a> (levels of customization, support)</li>
+      <li><a href="https://github.com/ExLibrisGroup/customModule" target="_blank" rel="noopener">ExLibrisGroup/customModule</a> (Angular components, build and upload)</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+(function(){
+  const LAYERS = {
+    izcfg:"IZ settings in Alma", izpkg:"IZ Customization Package", nz:"Central Package (NZ)", def:"NDE default"
+  };
+  const SHORT = {izcfg:"IZ · Alma", izpkg:"IZ package", nz:"Central", def:"Default"};
+  const EL_NAMES = {favicon:"Favicon", topheader:"Header", logo:"Logo", header:"Menu", landing:"Landing page", heading:"Banner heading", searchtext:"Search box text", angular:"Angular components", css:"CSS", theme:"Colour theme", footer:"Footer"};
+
+  const s = {inherit:true, path:"LP", lBrand:true, pBrand:true, pCss:true, pTheme:false, pHead:false, pFoot:false, pNg:false};
+  let sel = "landing";
+  const $ = id => document.getElementById(id);
+
+  function resolve(el){
+    const LP = s.path==="LP", PKG = s.path==="PKG";
+    const brandLocal = (PKG && s.pBrand) || (LP && s.lBrand);
+    const headLocal = PKG && s.pHead, footLocal = PKG && s.pFoot;
+    switch(el){
+      case "favicon":
+      case "logo": {
+        const isLogo = el==="logo";
+        const file = isLogo ? "assets/images/library-logo.png" : "assets/icons/favicon.ico";
+        if (brandLocal) return {src:["izpkg"], what: isLogo ? "The institution's own logo." : "The institution's own favicon.", file,
+          note: LP ? "On path A this small package exists only for the logo and favicon. Everything else is still inherited or set in Alma." : (isLogo ? "Max 300 × 100 px, PNG, 30 KB or less. The link target is set in the view's General tab." : "Must be a real .ico file.")};
+        if (isLogo && s.inherit) return {src:["nz"], what:"The Sikt logo from the Central Package.", file:"Central Package › assets/images/library-logo.png", warn:true, warnLabel:"Not your own logo. ",
+          note:"The view falls back to the consortium's logo. Upload a package with library-logo.png to show the institution's own."};
+        return {src:["def"], what: isLogo ? "The default logo." : "The default favicon.", file:"(none uploaded)", warn: true,
+          note: LP ? "The Landing Page tab cannot set a logo or favicon. Upload a package with " + file.split("/").pop() + " to fix this." : "The package does not contain " + file + ". Switch on “Logo & favicon” to add it."};
+      }
+      case "header":
+        return {src:["izcfg"], what:"The menu links in the header.", file:"Configure Views › [view] › Links Menu",
+          note:"Set per view in Alma. Inheriting the Central Package does not change the menu."};
+      case "topheader": {
+        if (headLocal) return {src:["izpkg"], what:"The institution's own header above the menu bar.", file:"assets/header-footer/header.html",
+          note:"The Central Package does not include a header, so it only comes from an own package (path B)."};
+        return {src:["def"], tag:"N/A", what:"No header. NDE has none out of the box, and the Central Package does not add one.", file:"(none)",
+          note: PKG ? "Switch on “Own header” to add header.html to the package." : "A header requires an own Customization Package (path B)."};
+      }
+      case "footer": {
+        if (footLocal) return {src:["izpkg"], what:"The institution's own footer.", file:"assets/header-footer/footer.html",
+          note:"Replaces the central footer for this view. Central changes to the footer no longer reach you."};
+        if (s.inherit) return {src:["nz"], what:"The consortium's shared footer.", file:"assets/header-footer/footer.html",
+          note:"Updated by the consortium office. Reaches every inheriting view automatically."};
+        return {src:["def"], tag:"N/A", what:"No footer. NDE has none out of the box.", file:"(none)",
+          note:"A footer only appears when a package (central or local) contains footer.html."};
+      }
+      case "css": {
+        if (PKG && s.pCss) return {src: s.inherit ? ["izpkg","nz"] : ["izpkg"], what: s.inherit ? "Local CSS added on top of the consortium's CSS." : "Local CSS only.", file:"assets/css/custom.css",
+          note: s.inherit ? "Both files apply. Where a local rule conflicts with a central rule, the local rule wins. Central CSS changes still reach the view." : "Without inheritance only the local CSS applies."};
+        if (s.inherit) return {src:["nz"], what:"The consortium's shared CSS.", file:"assets/css/custom.css", note:"Shared styling for all inheriting views."};
+        return {src:["def"], what:"NDE default styling only.", file:"(none)", note:""};
+      }
+      case "angular": {
+        const src = [];
+        if (PKG && s.pNg) src.push("izpkg");
+        if (s.inherit) src.push("nz");
+        if (!src.length) return {src:["def"], what:"No custom components, only NDE's built-in ones.", file:"(none)", note:"Custom components are built with customModule and uploaded in a package."};
+        const both = src.length===2;
+        return {src, what: both ? "The consortium's components and the institution's own components." : (src[0]==="nz" ? "The consortium's shared Angular components." : "The institution's own Angular components."),
+          file:"customModule build (ZIP from dist/)",
+          note: both ? "Both sets of components run side by side, but not if they build on the same element in the same position (before, after, top or bottom). Agree with the consortium office which elements and positions are taken." : (src[0]==="nz" ? "Built and maintained by the consortium office. Every inheriting view gets them." : "The institution builds, tests and maintains these itself."),
+          verify: both};
+      }
+      case "theme":
+        if (PKG && s.pTheme) return {src:["izpkg"], what:"The institution's own Angular Material colour theme.", file:"customModule › custom colour theme (in the uploaded package)",
+          note:"Overrides the ready-made theme chosen in Alma. Ex Libris recommends this over overriding colour variables in custom.css."};
+        return {src:["izcfg"], what:"The view's colour theme.", file:"Manage Customization Package › Color Theme – New UI",
+          note:"Chosen per view, no package needed. Also colours a landing page set up on the Landing Page tab. The Central Package deliberately sets no colour theme, so each institution picks one of Alma’s ready-made themes."};
+      case "heading":
+        return {src:["izcfg"], what:"The heading in the banner above the search box.", file:"Display Configuration › Labels › Search Tile Labels › nde.landing.header",
+          note:"Always a label in Alma, whether the view uses Landing Page Configuration or its own package. One value per language. The default is “Welcome to Oria” (Norwegian: “Velkommen til Oria”)."};
+      case "searchtext":
+        return {src:["izcfg"], what:"The placeholder text inside the search box.", file:"Display Configuration › Labels › Search Tile Labels › nui.search.placeholder",
+          note:"Always a label in Alma, whether the view uses Landing Page Configuration or its own package. One value per language."};
+      case "landing": {
+        if (LP) return {src:["izcfg"], what:"Built from the Landing Page tab: background image, quick links, announcement, login box and “About the library”. The banner heading and search box text are labels (click them).",
+          file:"Configure Views › [view] › Landing Page › Enable configuration",
+          note:"“About the library” has a title, two paragraphs, four bullet points and its own image. Multilingual via labels. Sections can be switched on and off and reordered. Images up to 5 MB. The layout itself is fixed."};
+        return {src:["izpkg"], what:"Built entirely from the package's own HTML and CSS. Layout, content and styling are up to the institution.",
+          file:"assets/homepage/homepage_xx.html, homepage.css, homepage_background.*",
+          note:"The banner heading and search box text are still labels in Alma (click them). Everything else in this area comes from the package. One HTML file per language (homepage_en.html, homepage_nb.html …). The consortium office’s starter package is the starting point."};
+      }
+    }
+  }
+
+  const LANDING_LP = "<span class='lp'><span class='lp-banner'><button type='button' class='region lbl' data-el='heading'><span class='hd'>Welcome to Oria</span></button><button type='button' class='region lbl lbl-search' data-el='searchtext'><span class='search'>Search for books, articles and more…</span></button></span>" +
+    "<span class='lp-body'><span class='ql'><span>Opening hours</span><span>Book a study room</span><span>Ask a librarian</span><span>Interlibrary loan</span></span>" +
+    "<span class='ann'>Announcement: Reduced opening hours during the semester break.</span>" +
+    "<span class='about'><span class='about-text'><b>What is Oria?</b><span>One search for books, e-books, articles, databases and more.</span><span>Sign in to:</span><span class='chk'>Reserve and renew books</span><span class='chk'>Create favourites lists</span><span class='chk'>View full search results</span></span><span class='about-img' aria-hidden='true'></span></span></span></span>";
+  const LANDING_PKG = "<span class='cp'><span class='cp-hero'><span class='cp-text'><span class='cp-kicker'>University Library</span><button type='button' class='region lbl' data-el='heading'><span class='cp-h'>Welcome to Oria</span></button><button type='button' class='region lbl lbl-search' data-el='searchtext'><span class='search'>Search for books, articles and more…</span></button></span>" +
+    "</span>" +
+    "<span class='cp-cols'><span><b>News</b>New databases for law<i>12 Oct</i>Exam period hours<i>8 Oct</i></span>" +
+    "<span><b>Open today</b>08:00–22:00<i>Main library</i></span>" +
+    "<span><b>Need help?</b>Chat with a librarian<i>Weekdays 09–15</i></span></span></span>";
+
+  function render(){
+    document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.path===s.path));
+    $("optsLP").hidden = s.path!=="LP"; $("optsPKG").hidden = s.path!=="PKG";
+
+    $("landingBox").innerHTML = s.path==="LP" ? LANDING_LP : LANDING_PKG;
+    const res = {};
+    Object.keys(EL_NAMES).forEach(k=>res[k]=resolve(k));
+
+    document.querySelectorAll(".region").forEach(r=>{
+      const k = r.dataset.el, x = res[k];
+      r.className = r.className.replace(/\bc-\w+\b/g,"").replace(/\b(sel|warn)\b/g,"").replace(/\s+/g," ").trim();
+      r.classList.add("c-"+x.src[0]);
+      if (x.warn) r.classList.add("warn");
+      if (k===sel) r.classList.add("sel");
+      r.dataset.tag = (x.warn ? "⚠ " : "") + (x.tag || x.src.map(v=>SHORT[v]).join(" + "));
+      r.setAttribute("aria-label", EL_NAMES[k] + ": " + x.src.map(v=>LAYERS[v]).join(" + "));
+    });
+
+    const brand = res.logo.src[0]==="izpkg";
+    const fav = res.favicon.src[0]==="izpkg", lsrc = res.logo.src[0];
+    $("favIcon").className = "fav " + (fav ? "loc" : "def"); $("favIcon").textContent = fav ? "UB" : "";
+    $("logoBox").className = "logo" + (lsrc==="izpkg" ? " loc" : lsrc==="nz" ? " nzl" : ""); $("logoTxt").textContent = lsrc==="izpkg" ? "University Library" : lsrc==="nz" ? "Sikt" : "Default logo";
+    $("cssTxt").textContent = res.css.src.length===2 ? "Central CSS + local CSS (local wins on conflicts)" : (res.css.src[0]==="nz" ? "Consortium CSS" : (res.css.src[0]==="izpkg" ? "Local CSS only" : "NDE default styling"));
+    const ng=[];
+    if (s.inherit) ng.push("<span style='color:var(--nz)'>Consortium component</span>");
+    if (s.path==="PKG"&&s.pNg) ng.push("<span style='color:var(--izpkg)'>Local component</span>");
+    if (!ng.length) ng.push("<span>Built-in NDE elements only</span>");
+    $("ngBox").innerHTML = ng.join("");
+    $("themeTxt").textContent = res.theme.src[0]==="izpkg" ? "Own Angular Material theme" : "Ready-made theme, chosen per view in Alma";
+    $("swatch").innerHTML = (res.theme.src[0]==="izpkg" ? ["#7a3e12","#c26a12","#f3c48d","#fdf1e3"] : ["#4a2f8f","#6b4fbb","#b9a8ea","#f1ecfc"]).map(v=>"<i style='background:"+v+"'></i>").join("");
+    const h = res.topheader.src[0];
+    $("topTxt").textContent = h==="izpkg" ? "Local header · e.g. university-wide navigation bar" : "No header";
+    document.querySelector(".r-top").classList.toggle("none", h==="def");
+    const f = res.footer.src[0];
+    $("footTxt").textContent = f==="nz" ? "Consortium footer · Privacy · Accessibility statement · Contact" : (f==="izpkg" ? "Local footer · the institution's own links and address" : "No footer");
+    document.querySelector(".r-foot").classList.toggle("none", f==="def");
+
+    const x = res[sel], c = x.warn ? "warn" : x.src[0];
+    const insp = $("inspector");
+    insp.className = "panel inspector a-insp c-"+c;
+    insp.innerHTML =
+      "<div class='insp-bar'><svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M4 4l7 17 2.5-7.5L21 11z'/></svg>Where it comes from</div>" +
+      "<div class='insp-body'>" +
+      "<div class='insp-title'><i class='dot c-"+c+"'></i>"+EL_NAMES[sel]+"</div>" +
+      "<p>"+x.what+"</p>" +
+      "<dl><dt>Comes from</dt><dd>"+x.src.map(v=>"<span class='chip c-"+v+"'>"+LAYERS[v]+"</span>").join(" ")+"</dd>" +
+      "<dt>File or setting</dt><dd><code>"+x.file+"</code></dd></dl>" +
+      (x.note ? (x.warn ? "<div class='alert c-warn'><b>"+(x.warnLabel || (s.path==="LP" ? "Missing package. " : "Missing from package. "))+"</b>"+x.note+"</div>" : x.verify ? "<div class='alert c-izpkg'><b>Watch out. </b>"+x.note+"</div>" : "<p style='color:var(--muted);font-size:14px'>"+x.note+"</p>") : "") +
+      "<p style='font-size:12.5px;color:var(--muted)'>Click another part of the view to compare.</p></div>";
+  }
+  function pick(k){
+    sel = k; render();
+    const insp = $("inspector");
+    insp.classList.remove("flash"); void insp.offsetWidth; insp.classList.add("flash");
+    if (window.matchMedia("(max-width:900px)").matches) insp.scrollIntoView({behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block:"nearest"});
+  }
+
+  document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{s.path=b.dataset.path; sel="landing"; render();}));
+  ["inherit","lBrand","pBrand","pCss","pTheme","pHead","pFoot","pNg"].forEach(id=>{
+    const el = $(id); el.checked = s[id];
+    el.addEventListener("change",()=>{ s[id]=el.checked;
+      sel = {inherit:"angular", lBrand:"logo", pBrand:"logo", pCss:"css", pTheme:"theme", pHead:"topheader", pFoot:"footer", pNg:"angular"}[id]; render(); });
+  });
+  document.addEventListener("click", e=>{ const r = e.target.closest(".region"); if (r) pick(r.dataset.el); });
+  document.addEventListener("keydown", e=>{ const r = e.target.closest && e.target.closest("div.region"); if (r && e.target===r && (e.key==="Enter"||e.key===" ")){ e.preventDefault(); pick(r.dataset.el); } });
+  document.getElementById("outlines").addEventListener("change", e=>document.getElementById("playground").classList.toggle("outlines", e.target.checked));
+  const DEFAULTS = Object.assign({}, s);
+  document.getElementById("pgReset").addEventListener("click", ()=>{
+    Object.assign(s, DEFAULTS);
+    Object.keys(s).forEach(k=>{ const el=document.getElementById(k); if (el && el.type==="checkbox") el.checked = s[k]; });
+    sel = "landing"; render();
+  });
+  render();
+})();
+</script>
+
+</body>
+</html>

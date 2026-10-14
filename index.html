@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>html{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>NDE-tilpasningslag</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a working model up top (controls + inspector | mock view), reference sections below in a single reading column. */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --sunk:#e9edf2; --ink:#16202b; --muted:#566373; --line:#d6dde5;
+  --def:#7d8794; --nz:#2c56cc; --izpkg:#b8620c; --izcfg:#0f8565; --warn:#c2352b;
+  --f-display:"Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --f-body:"Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1319; --surface:#161d26; --sunk:#1d2631; --ink:#e5eaf0; --muted:#9ba7b5; --line:#2b3643;
+    --def:#8b96a3; --nz:#7596ff; --izpkg:#f0a04b; --izcfg:#3cc79d; --warn:#ff6e61; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1319; --surface:#161d26; --sunk:#1d2631; --ink:#e5eaf0; --muted:#9ba7b5; --line:#2b3643;
+  --def:#8b96a3; --nz:#7596ff; --izpkg:#f0a04b; --izcfg:#3cc79d; --warn:#ff6e61; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+.wrap{max-width:1200px;margin:0 auto;padding-inline:20px;padding-block:28px 64px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(28px,4.2vw,44px);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(21px,2.4vw,27px);font-weight:700;letter-spacing:-.01em}
+h3{font-size:16px;font-weight:700}
+p{margin:0}
+code,.mono{font-family:var(--f-mono);font-size:.86em}
+a{color:var(--nz)}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lede{max-width:68ch;color:var(--muted);font-size:16.5px}
+header.top{display:grid;gap:12px;margin-bottom:28px}
+
+/* layer colour helpers */
+.c-def{--c:var(--def)} .c-nz{--c:var(--nz)} .c-izpkg{--c:var(--izpkg)} .c-izcfg{--c:var(--izcfg)} .c-warn{--c:var(--warn)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--c);flex:none}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;
+  background:color-mix(in srgb,var(--c) 14%,transparent);color:color-mix(in srgb,var(--c) 75%,var(--ink));white-space:nowrap}
+
+/* layer chain */
+.chain{display:grid;gap:12px;margin-bottom:32px}
+.chain-row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr);gap:10px;align-items:stretch}
+.chain-box{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:var(--r);padding:16px 18px;display:grid;gap:6px;align-content:start;min-width:0}
+.chain-box .n{font:700 12px/1 var(--f-mono);letter-spacing:.06em;color:color-mix(in srgb,var(--c) 80%,var(--ink))}
+.chain-box h3{font-size:17px}
+.chain-box p{color:var(--muted);font-size:14px}
+.chain-box .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.chain-arrow{align-self:center;color:var(--muted);font-size:22px;line-height:1}
+@media (max-width:760px){.chain-row{grid-template-columns:minmax(0,1fr)}.chain-arrow{justify-self:center;transform:rotate(90deg)}}
+.chain-rule{font-weight:600;font-size:15px}
+.chain-ex{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;font-size:13.5px;color:var(--muted)}
+
+/* playground frame */
+.playground{border:2px solid color-mix(in srgb,var(--nz) 55%,var(--line));border-radius:16px;background:color-mix(in srgb,var(--nz) 6%,var(--bg));padding:18px;display:grid;gap:16px;box-shadow:0 12px 32px -20px color-mix(in srgb,var(--nz) 60%,transparent)}
+@media (max-width:600px){.playground{padding:12px;border-radius:12px}}
+.pg-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding-bottom:12px;border-bottom:1px dashed color-mix(in srgb,var(--nz) 40%,var(--line))}
+.pg-badge{display:inline-flex;align-items:center;gap:6px;background:var(--nz);color:var(--surface);font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:5px 11px;border-radius:999px}
+.pg-head h2{font-size:21px}
+.pg-head p{color:var(--muted);font-size:14px;flex:1 1 260px;min-width:0}
+.pg-reset{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 12px;border-radius:8px;cursor:pointer}
+.pg-reset:hover{border-color:var(--nz)}
+.pg-reset:focus-visible{outline:2px solid var(--nz);outline-offset:2px}
+
+/* always-on source outlines */
+.pg-toggle{font-size:13.5px;font-weight:600;align-items:center}
+.playground.outlines .region{outline:2px solid color-mix(in srgb,var(--c) 75%,transparent);outline-offset:-3px}
+.playground.outlines .region.lbl{outline-offset:2px}
+.playground.outlines .region.sel{outline:3px solid var(--c);background:color-mix(in srgb,var(--c) 9%,transparent)}
+.playground.outlines .region.warn{outline:2px solid var(--warn)}
+.playground.outlines .region.warn.sel{outline-width:3px}
+
+/* model */
+.model{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);grid-template-areas:"ctrl view" "insp view";grid-template-rows:auto 1fr;gap:20px;align-items:start}
+.model .a-ctrl{grid-area:ctrl} .model .a-view{grid-area:view} .model .a-insp{grid-area:insp}
+@media (max-width:900px){.model{grid-template-columns:minmax(0,1fr);grid-template-areas:"ctrl" "view" "insp";grid-template-rows:auto}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:grid;gap:14px;min-width:0}
+.panel h3{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 8px}
+.panel h3 small{font-weight:500;color:var(--muted);font-size:12px}
+
+.seg{display:grid;grid-template-columns:repeat(2,1fr);background:var(--sunk);border-radius:9px;padding:3px;gap:3px}
+.seg button{font:inherit;font-size:13px;font-weight:600;border:0;background:transparent;color:var(--muted);padding:8px 6px;border-radius:7px;cursor:pointer;line-height:1.25}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgb(0 0 0 / .12)}
+.seg button:focus-visible,.region:focus-visible,.switch input:focus-visible+span{outline:2px solid var(--nz);outline-offset:2px}
+.opts{display:grid;gap:8px}
+.opts .hint{font-size:13px;color:var(--muted)}
+.fixed{font-size:13px;display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:8px;background:color-mix(in srgb,var(--izpkg) 10%,transparent)}
+.fixed small{display:block;color:var(--muted);font-size:12.5px}
+.switch{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:14px}
+.switch input{position:absolute;opacity:0;width:1px;height:1px}
+.switch span.box{flex:none;width:34px;height:20px;border-radius:999px;background:var(--line);position:relative;transition:background .15s;margin-top:1px}
+.switch span.box::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:var(--surface);transition:transform .15s}
+.switch input:checked+span.box{background:var(--c,var(--nz))}
+.switch input:checked+span.box::after{transform:translateX(14px)}
+.switch small{display:block;color:var(--muted);font-size:12.5px}
+
+/* mock view */
+.viewhint{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--ink)}
+.viewhint svg{flex:none}
+.browser{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--sunk)}
+.tabbar{display:flex;align-items:center;gap:8px;padding:8px 120px 0 10px}
+.tabbar .tab{display:flex;align-items:center;gap:8px;background:var(--surface);border-radius:8px 8px 0 0;padding:7px 12px;font-size:12.5px;max-width:280px;min-width:0}
+.tab .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fav{width:16px;height:16px;border-radius:4px;flex:none;display:grid;place-items:center;font-size:9px;font-weight:800;color:#fff}
+.fav.def{background:var(--def)} .fav.loc{background:var(--izpkg)}
+.page{background:var(--surface);display:grid;gap:0}
+.region{all:unset;box-sizing:border-box;display:block;position:relative;cursor:pointer;outline:2px dashed transparent;outline-offset:-3px;border-radius:6px;transition:outline-color .15s,background .15s}
+.region::after{content:attr(data-tag);position:absolute;top:4px;right:6px;font:600 10.5px/1 var(--f-body);letter-spacing:.03em;padding:3px 6px;border-radius:999px;
+  background:var(--c);color:var(--surface);opacity:.92;pointer-events:none;white-space:nowrap}
+.region:hover,.region.sel{outline-color:var(--c);background:color-mix(in srgb,var(--c) 7%,transparent)}
+.region.sel{outline-style:solid;outline-width:3px}
+.tabbar .region::after{top:50%;right:auto;left:100%;margin-left:8px;transform:translateY(-50%)}
+.r-head .region::after{top:100%;margin-top:4px}
+.region.warn::after{background:var(--warn)}
+.region.warn{outline:2px solid var(--warn);outline-offset:-3px}
+.r-css,.r-foot,.themebtn{padding-right:120px!important}
+.r-head{display:flex;align-items:center;gap:12px;padding:12px 14px 30px;border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px;padding:6px 10px;border-radius:6px;border:1px dashed var(--line)}
+.logo.loc{border:0;background:color-mix(in srgb,var(--izpkg) 16%,transparent);color:color-mix(in srgb,var(--izpkg) 70%,var(--ink))}
+.logo.nzl{border:0;background:color-mix(in srgb,var(--nz) 14%,transparent);color:color-mix(in srgb,var(--nz) 75%,var(--ink))}
+.logo .mk{width:18px;height:18px;border-radius:4px;background:currentColor;opacity:.8}
+.menu{display:flex;gap:14px;font-size:12.5px;color:var(--muted);flex-wrap:wrap;justify-content:flex-end}
+.search{width:min(440px,100%);height:36px;border-radius:999px;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;padding:0 14px;font-size:12.5px;color:var(--muted)}
+.r-landing{display:grid}
+/* landing: configured in Alma */
+.lp{display:grid}
+.lp-banner{padding:28px 18px 26px;text-align:center;display:grid;gap:12px;justify-items:center;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--nz) 22%,var(--surface)),color-mix(in srgb,var(--nz) 6%,var(--surface)))}
+.lp-banner .hd{font-family:var(--f-display);font-weight:800;font-size:clamp(17px,2.2vw,23px)}
+.lp-body{padding:14px;display:grid;gap:10px}
+.ql{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.ql span{border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px;text-align:center}
+.ann{font-size:12.5px;border-radius:8px;padding:8px 10px;background:var(--sunk)}
+.about{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1fr);border-radius:8px;overflow:hidden;background:color-mix(in srgb,var(--nz) 8%,var(--surface));border:1px solid var(--line)}
+@media (max-width:560px){.about{grid-template-columns:minmax(0,1fr)}}
+.about-text{padding:14px 16px;display:grid;gap:6px;font-size:12.5px;text-align:left;align-content:start}
+.about-text b{font-size:14px}
+.about-text .chk{display:block;color:var(--muted)}
+.about-text .chk::before{content:"✓";margin-right:6px;color:var(--ink)}
+.about-img{min-height:90px;margin:10px;border-radius:6px;background:linear-gradient(180deg,color-mix(in srgb,var(--line) 70%,var(--surface)) 0 48%,color-mix(in srgb,#7d9a6a 30%,var(--surface)) 48% 100%)}
+/* landing: the institution's own HTML */
+.cp{display:grid;gap:0;font-family:Georgia,"Times New Roman",serif}
+.cp-hero{display:grid}
+.cp-text{padding:24px 20px;display:grid;gap:10px;align-content:center;background:var(--ink);color:var(--surface)}
+.cp-kicker{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;opacity:.7}
+.cp-h{font-size:clamp(20px,2.6vw,28px);line-height:1.1;font-weight:700}
+.cp-text .search{border-radius:4px;border:0;width:100%}
+.cp-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-bottom:1px solid var(--line)}
+@media (max-width:560px){.cp-cols{grid-template-columns:minmax(0,1fr)}}
+.cp-cols > span{display:grid;gap:4px;padding:14px 16px;font-size:13px;border-right:1px solid var(--line);align-content:start}
+.cp-cols > span:last-child{border-right:0}
+.cp-cols b{font-size:15px}
+.cp-cols i{font-style:normal;color:var(--muted);font-family:var(--f-body);font-size:12px}
+.r-result{margin:12px 14px 0;border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:grid;gap:6px}
+.r-result .ttl{font-weight:700;font-size:13.5px}
+.r-result .meta{font-size:12px;color:var(--muted)}
+.ng{display:flex;flex-wrap:wrap;gap:6px}
+.ng span{font-size:11.5px;font-weight:600;padding:4px 8px;border-radius:6px;border:1px solid var(--line)}
+.opts h5{margin:6px 0 0;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.r-css{margin:12px 14px 0;font-size:12px;color:var(--muted);padding:8px 10px}
+.r-foot{padding:14px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap;background:var(--sunk);margin-top:12px}
+.r-top{padding:10px 14px;font-size:12px;color:var(--muted);display:flex;padding-right:120px!important;border-bottom:1px solid var(--line);background:var(--sunk)}
+.r-top.none{background:transparent;border-bottom:1px dashed var(--line);font-style:italic}
+.r-foot.none{background:transparent;border-top:1px dashed var(--line);font-style:italic}
+.themebtn{display:block}
+
+/* view-wide settings */
+.meta{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:14px;display:grid;gap:10px}
+.meta-head{display:flex;justify-content:space-between;gap:4px 10px;flex-wrap:wrap;align-items:baseline}
+.meta-head b{font-size:14px}
+.meta-head small{color:var(--muted);font-size:12.5px}
+.meta-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:640px){.meta-grid{grid-template-columns:minmax(0,1fr)}}
+.region.mtile{padding:12px;padding-top:32px;border:1px solid var(--line);border-radius:8px;display:grid;gap:6px;align-content:start}
+.mtile .mt{font-weight:700;font-size:13.5px}
+.mtile .mv{font-size:12.5px;color:var(--muted)}
+.swatches{display:flex;gap:4px}
+.swatches i{width:22px;height:22px;border-radius:5px;display:block;border:1px solid var(--line)}
+
+/* label boxes inside the landing page */
+.region.lbl{display:inline-block;padding:4px 10px;outline:2px dashed color-mix(in srgb,var(--c) 60%,transparent);outline-offset:2px;border-radius:6px}
+.region.lbl.sel{outline:3px solid var(--c)}
+.region.lbl::after{top:-12px;right:-10px}
+.region.lbl.lbl-search{display:block;width:min(440px,100%);padding:0}
+.cp-text .region.lbl.lbl-search{width:100%}
+.region.lbl.lbl-search .search{width:100%}
+
+/* inspector */
+.inspector{border:2px solid var(--c);padding:0;gap:0;overflow:hidden;box-shadow:0 6px 20px -10px color-mix(in srgb,var(--c) 60%,transparent)}
+.insp-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:color-mix(in srgb,var(--c) 14%,var(--surface));font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:color-mix(in srgb,var(--c) 75%,var(--ink))}
+.insp-bar span{margin-left:auto;font-weight:500;letter-spacing:0;text-transform:none;font-size:12.5px;color:var(--muted)}
+.insp-body{padding:16px 18px 18px;display:grid;gap:12px}
+.insp-title{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-size:24px;font-weight:800;letter-spacing:-.01em;line-height:1.1}
+.insp-title .dot{width:14px;height:14px;border-radius:4px}
+.inspector dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:8px 14px;margin:0;font-size:14px}
+.inspector dt{color:var(--muted);font-size:12.5px;padding-top:2px}
+.inspector dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.inspector.flash{animation:flash .5s ease-out}
+@keyframes flash{from{box-shadow:0 0 0 6px color-mix(in srgb,var(--c) 35%,transparent)}to{box-shadow:0 6px 20px -10px color-mix(in srgb,var(--c) 60%,transparent)}}
+.alert{border-radius:8px;padding:10px 12px;font-size:13.5px;background:color-mix(in srgb,var(--c) 12%,transparent);border:1px solid color-mix(in srgb,var(--c) 40%,transparent)}
+.alert b{color:color-mix(in srgb,var(--c) 80%,var(--ink))}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+
+/* reading sections */
+section.read{margin-top:56px;display:grid;gap:18px}
+.cols2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:760px){.cols2{grid-template-columns:minmax(0,1fr)}}
+.path{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:grid;gap:12px;align-content:start;border-top:4px solid var(--c)}
+.path .tagline{color:var(--muted)}
+.path ul{margin:0;padding-left:18px;display:grid;gap:4px}
+.path h4{margin:4px 0 0;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:14px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:600;width:22%}
+
+.rule{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;background:var(--surface);border:2px solid var(--izpkg);border-radius:var(--r);padding:22px}
+@media (max-width:760px){.rule{grid-template-columns:minmax(0,1fr)}}
+.rule ol{margin:0;padding-left:20px;display:grid;gap:6px}
+pre.tree{margin:0;font-family:var(--f-mono);font-size:12.5px;line-height:1.7;background:var(--sunk);border-radius:8px;padding:14px 16px;overflow-x:auto}
+pre.tree .hl{color:var(--izpkg);font-weight:600}
+pre.tree .dim{color:var(--muted)}
+.specs{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;font-size:13.5px;margin:0}
+.specs dt{color:var(--muted)} .specs dd{margin:0}
+
+.paths{display:grid;gap:8px}
+.paths div{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:12px;padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-radius:8px;font-size:14px}
+@media (max-width:600px){.paths div{grid-template-columns:minmax(0,1fr);gap:2px}}
+.paths code{color:var(--muted)}
+.verify{display:grid;gap:10px;counter-reset:q}
+.verify li{list-style:none;background:var(--surface);border:1px dashed var(--line);border-radius:8px;padding:12px 14px;font-size:14px}
+.verify{padding:0;margin:0}
+.sources{font-size:13.5px;color:var(--muted);display:grid;gap:4px;padding-left:18px;margin:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">GO NDE · Primo VE NDE i en Network Zone</span>
+    <h1>NDE-tilpasningslag</h1>
+    <p class="lede">Slik settes en institusjons NDE-visning i Oria sammen. Velg en vei i modellen nedenfor, og klikk på en del av visningen for å se hvor den kommer fra.</p>
+  </header>
+
+  <section class="chain" aria-label="De tre lagene">
+    <div class="chain-row">
+      <div class="chain-box c-def"><span class="n">1</span><h3>Clarivates standard</h3><p>Slik ser NDE ut fra leverandøren.</p></div>
+      <span class="chain-arrow" aria-hidden="true">→</span>
+      <div class="chain-box c-nz"><span class="n">2</span><h3>Sikts Central Package</h3><p>Felles for alle institusjoner som arver: Sikt-logo, footer, CSS og Angular-komponenter.</p></div>
+      <span class="chain-arrow" aria-hidden="true">→</span>
+      <div class="chain-box c-izpkg"><span class="n">3</span><h3>Din institusjon</h3><p>Egne valg: innstillinger i Alma, og egen Customization Package hvis dere trenger det.</p><span class="chips"><span class="chip c-izcfg">Innstillinger i Alma</span><span class="chip c-izpkg">Egen pakke</span></span></div>
+    </div>
+    <p class="chain-rule">Hvert lag bygger på laget før. Der to lag setter det samme, vinner det høyeste nummeret.</p>
+    <div class="chain-ex"><span>Eksempel, logoen:</span><span class="chip c-def">Standardlogo</span><span aria-hidden="true">→</span><span class="chip c-nz">Sikt-logo</span><span aria-hidden="true">→</span><span class="chip c-izpkg">Din logo</span></div>
+  </section>
+
+  <section class="playground outlines" id="playground" aria-label="Interaktiv modell">
+    <div class="pg-head"><span class="pg-badge"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l7 17 2.5-7.5L21 11z"/></svg>Interaktiv modell</span><h2>Prøv selv</h2><p>Bytt vei og valg til venstre, og klikk på en del av visningen for å se hvor den kommer fra.</p><label class="switch c-nz pg-toggle"><input type="checkbox" id="outlines" checked><span class="box"></span><span>Vis alle kilder</span></label><button type="button" class="pg-reset" id="pgReset">↺ Tilbakestill</button></div>
+  <div class="model">
+    <div class="panel a-ctrl">
+      <h3>Din institusjon (IZ) <small>Fanen Manage Customization Package</small></h3>
+      <label class="switch c-nz">
+        <input type="checkbox" id="inherit" checked>
+        <span class="box"></span>
+        <span><b>Inherit from Central Package</b><small>Visningen får konsortiets pakke og alle senere oppdateringer av den automatisk.</small></span>
+      </label>
+      <div>
+        <div class="eyebrow" style="margin-bottom:6px">Slik tilpasser IZ-en videre</div>
+        <div class="seg" role="group" aria-label="Tilpasningsvei">
+          <button type="button" data-path="LP" aria-pressed="true">A · Landing Page Config</button>
+          <button type="button" data-path="PKG" aria-pressed="false">B · Egen pakke</button>
+        </div>
+      </div>
+      <div class="opts" id="optsLP">
+        <p class="hint"><b>Anbefalt utgangspunkt.</b> IZ-en krysser av for <b>Enable configuration</b> i visningens Landing Page-fane og setter overskrift, bilder, hurtiglenker, kunngjøring og «About the library» i Alma. Ingen kode.</p>
+        <label class="switch c-izpkg"><input type="checkbox" id="lBrand" checked><span class="box"></span><span><b>Last også opp en liten pakke med logo og favicon</b><small>Slå av for å se hva som skjer uten den.</small></span></label>
+      </div>
+      <div class="opts" id="optsPKG" hidden>
+        <p class="hint">For institusjoner som trenger mer enn skjemaet for landingssiden gir. IZ-en laster opp sin egen Customization Package.</p>
+        <div class="fixed"><i class="dot c-izpkg" style="margin-top:4px"></i><span><b>HTML for landingssiden er alltid med</b><small>Homepage-filene i pakken bygger hele landingssiden. Ingenting fra Landing Page-fanen brukes.</small></span></div>
+        <p class="hint">Velg hva pakken ellers inneholder:</p>
+        <h5>Profil</h5>
+        <label class="switch c-izpkg"><input type="checkbox" id="pBrand" checked><span class="box"></span><span>Logo og favicon</span></label>
+        <h5>Stil</h5>
+        <label class="switch c-izpkg"><input type="checkbox" id="pCss" checked><span class="box"></span><span>Lokal CSS (<code>custom.css</code>)</span></label>
+        <label class="switch c-izpkg"><input type="checkbox" id="pTheme"><span class="box"></span><span>Eget fargetema<small>Et Angular Material-tema bygget med customModule. Det overstyrer temaet valgt i Alma.</small></span></label>
+        <h5>Innhold og komponenter</h5>
+        <label class="switch c-izpkg"><input type="checkbox" id="pHead"><span class="box"></span><span>Egen header</span></label>
+        <label class="switch c-izpkg"><input type="checkbox" id="pFoot"><span class="box"></span><span>Egen footer</span></label>
+        <label class="switch c-izpkg"><input type="checkbox" id="pNg"><span class="box"></span><span>Egne Angular-komponenter (customModule)</span></label>
+      </div>
+    </div>
+
+    <div class="a-view" style="display:grid;gap:10px;min-width:0">
+      <div class="browser" aria-label="Eksempel på NDE-visning">
+        <div class="tabbar">
+          <button class="region tab" data-el="favicon" type="button"><span class="fav def" id="favIcon"></span><span class="t">Library Search</span></button>
+        </div>
+        <div class="page">
+          <button class="region r-top" data-el="topheader" type="button"><span id="topTxt"></span></button>
+          <div class="r-head">
+            <button class="region" data-el="logo" type="button" style="padding:2px"><span class="logo" id="logoBox"><span class="mk"></span><span id="logoTxt">Standardlogo</span></span></button>
+            <button class="region" data-el="header" type="button" style="margin-left:auto;padding:6px 8px;min-width:0"><span class="menu"><span>Search</span><span>Journals</span><span>Browse</span><span>My Library Card</span></span></button>
+          </div>
+          <div class="region r-landing" data-el="landing" role="button" tabindex="0"><span id="landingBox" style="display:grid"></span></div>
+          <button class="region r-foot" data-el="footer" type="button" style="display:flex"><span id="footTxt"></span></button>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="meta-head"><b>Innstillinger for hele visningen</b><small>Ikke et sted på siden. Disse gjelder i hele visningen.</small></div>
+        <div class="meta-grid">
+          <button class="region mtile" data-el="angular" type="button"><span class="mt">Angular-komponenter</span><span class="mv">Vises i poster, trefflister og andre steder</span><span class="ng" id="ngBox"></span></button>
+          <button class="region mtile" data-el="css" type="button"><span class="mt">CSS</span><span class="mv" id="cssTxt"></span></button>
+          <button class="region mtile" data-el="theme" type="button"><span class="mt">Fargetema</span><span class="swatches" id="swatch"></span><span class="mv" id="themeTxt"></span></button>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i class="dot c-def"></i>NDE-standard (Clarivate)</span>
+        <span><i class="dot c-nz"></i>Central Package (NZ)</span>
+        <span><i class="dot c-izpkg"></i>IZ-ens Customization Package</span>
+        <span><i class="dot c-izcfg"></i>IZ-ens innstillinger i Alma</span>
+      </div>
+    </div>
+
+    <div class="panel inspector a-insp" id="inspector" aria-live="polite"></div>
+  </div>
+  </section>
+
+  <!-- To veier -->
+  <section class="read">
+    <div style="display:grid;gap:8px"><span class="eyebrow">To veier videre for en institusjon</span><h2>Begge starter fra Central Package</h2>
+      <p class="lede">Ex Libris dokumenterer at en institusjon kan arve fra Central Package og samtidig laste opp sin egen pakke. De to slås sammen: Det som bare finnes i én av pakkene, brukes. Der begge definerer det samme, vinner institusjonens versjon.</p></div>
+    <div class="cols2">
+      <article class="path c-izcfg">
+        <span class="chip c-izcfg">Vei A · Anbefalt utgangspunkt</span>
+        <h3>Landing Page Configuration</h3>
+        <p class="tagline">Oppsett av landingssiden med pek-og-klikk i Alma. Bortsett fra logo og favicon kommer alt annet fra Central Package, så visningen holder tritt med konsortiet.</p>
+        <h4>Dette gjør IZ-en</h4>
+        <ul>
+          <li>Krysser av for <b>Enable configuration</b> i visningens Landing Page-fane.</li>
+          <li>Setter overskrift, bakgrunnsbilde og bilde for «About the library», hurtiglenker (tekst, URL, ikon), rekkefølge på elementer, kunngjøring, innloggingsboks og tekst for «About the library».</li>
+          <li>Tekstene blir flerspråklige gjennom Labels-kodetabellene. Kunngjøringer kan slås av og på, for eksempel i semesterferien.</li>
+          <li><b>Laster opp en liten pakke med logo og favicon.</b> Se regelen nedenfor.</li>
+        </ul>
+        <h4>Vær obs på</h4>
+        <ul>
+          <li>Landing Page-fanen gjelder bare landingssiden. Bortsett fra logo og favicon kommer alt annet fra Central Package og standardoppsettet.</li>
+          <li>Ingen egen layout. Fargene kommer fra visningens fargetema.</li>
+        </ul>
+      </article>
+      <article class="path c-izpkg">
+        <span class="chip c-izpkg">Vei B</span>
+        <h3>Egen Customization Package</h3>
+        <p class="tagline">Full kontroll over den lokale visningen, med de samme verktøyene som konsortiekontoret bruker. For behov som skjemaet for landingssiden ikke dekker.</p>
+        <h4>Dette gjør IZ-en</h4>
+        <ul>
+          <li>Starter fra startpakken konsortiekontoret gir alle institusjoner, så ingen trenger å bygge på malen i Alma.</li>
+          <li>Legger til eller endrer filer: CSS, header, footer, HTML for landingssiden, bilder, ikoner. Central Package har ingen header, så en header er bare mulig på denne måten.</li>
+          <li>Lokal CSS legges oppå den sentrale CSS-en. Der regler kolliderer, vinner den lokale regelen.</li>
+          <li>Kan erstatte de ferdige fargetemaene med sitt eget Angular Material-fargetema, bygget med <code>customModule</code>.</li>
+          <li>Bygger Angular-komponenter med Ex Libris' <code>customModule</code> fra GitHub for nye elementer i grensesnittet.</li>
+          <li>Pakker alt som <code>&lt;institution_code&gt;-&lt;view_code&gt;</code> og laster det opp til visningen.</li>
+        </ul>
+        <h4>Vær obs på</h4>
+        <ul>
+          <li>Krever HTML- og CSS-kompetanse, og Node.js/Angular for komponenter.</li>
+          <li>IZ-en eier sin egen kode. Clarivate gir ikke støtte for institusjonenes egne kodeendringer.</li>
+          <li>Det IZ-en definerer på nytt, følger ikke lenger sentrale oppdateringer.</li>
+          <li>Lokale Angular-komponenter kjører sammen med konsortiets, men ikke hvis begge bygger på samme element i samme posisjon (before, after, top, bottom). Avtal med konsortiekontoret.</li>
+        </ul>
+      </article>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th></th><th>A · Landing Page Configuration</th><th>B · Egen pakke</th></tr></thead>
+        <tbody>
+          <tr><td>Fleksibilitet</td><td>Bare landingssiden, innenfor feltene Alma tilbyr.</td><td>Høy. Alle filer i pakken, pluss Angular-komponenter og eget fargetema.</td></tr>
+          <tr><td>Kompetanse</td><td>Konfigurasjon i Alma.</td><td>HTML, CSS; Node.js og Angular for komponenter.</td></tr>
+          <tr><td>Landingssiden</td><td>Landing Page-fanen med <b>Enable configuration</b> avkrysset.</td><td><code>homepage_xx.html</code> og <code>homepage.css</code> i pakken.</td></tr>
+          <tr><td>Logo og favicon</td><td><b>Krever likevel en pakke</b> med de to filene.</td><td>I pakken.</td></tr>
+          <tr><td>Sentrale oppdateringer</td><td>Mottas for alt unntatt landingssiden, logo og favicon.</td><td>Mottas for alt IZ-en ikke har definert på nytt.</td></tr>
+          <tr><td>Hvem forvalter</td><td>IZ-en, i Alma.</td><td>IZ-en, inkludert egen kode.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Logoregelen -->
+  <section class="read">
+    <div style="display:grid;gap:8px"><span class="eyebrow">Regelen mange går glipp av</span><h2>Egen logo og favicon krever alltid en Customization Package</h2></div>
+    <div class="rule">
+      <div style="display:grid;gap:14px;align-content:start">
+        <p>Landing Page-fanen har ikke noe felt for logo eller favicon. De leses bare fra filer i en Customization Package. En IZ på vei A som vil ha egen logo og favicon, laster derfor opp en liten pakke med disse to filene, med konsortiekontorets startpakke som utgangspunkt. Alt annet arves fortsatt fra Central Package.</p>
+      </div>
+      <div style="display:grid;gap:14px;align-content:start;min-width:0">
+<pre class="tree">47BIBSYS_XXX-NDE_VIEW/
+└── assets/
+    ├── images/
+    │   └── <span class="hl">library-logo.png</span>
+    └── icons/
+        └── <span class="hl">favicon.ico</span></pre>
+        <dl class="specs">
+          <dt>Logo</dt><dd>Bare PNG, maks 300 × 100 px, maks 30 KB, opprinnelig sideforhold.</dd>
+          <dt>Favicon</dt><dd><code>favicon.ico</code> i mappa <code>icons</code>.</dd>
+          <dt>Hvis de mangler</dt><dd>Logo: Sikt-logoen fra Central Package når visningen arver, ellers Clarivates standardlogo. Favicon: Clarivates standard. Ingen feilmelding.</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hvor -->
+  <section class="read">
+    <div style="display:grid;gap:8px"><span class="eyebrow">Hvor ting styres</span><h2>Hvem gjør hva, og hvor i Alma</h2></div>
+    <div class="paths">
+      <div><b><span class="chip c-nz">NZ · Konsortiekontoret</span></b><span>Central Package for NDE: <code>Configuration › Discovery › Display Configuration › Manage Customization Package</code>, seksjonen <i>NDE Central Package</i>. Mappenavn <code>&lt;NZ_code&gt;-CENTRAL_PACKAGE</code>. Inneholder Sikt-logoen, felles Angular-komponenter, footer, CSS og felles bilder. Konsortiekontoret gir også institusjonene en startpakke som utgangspunkt for deres egen pakke.</span></div>
+      <div><b><span class="chip c-nz">IZ · Arv</span></b><span><code>Configure Views › [view] › Manage Customization Package</code>, kryss av for <i>Inherit from Central Package</i>.</span></div>
+      <div><b><span class="chip c-izpkg">IZ · Egen pakke (B)</span></b><span>Samme fane, last opp en ZIP-fil i feltet <i>Customization Package</i>. Start fra konsortiekontorets startpakke.</span></div>
+      <div><b><span class="chip c-izcfg">IZ · Landingsside (A)</span></b><span><code>Configure Views › [view] › Landing Page</code>, kryss av for <i>Enable configuration</i>. Tekster i <code>Display Configuration › Labels</code>.</span></div>
+      <div><b><span class="chip c-izcfg">IZ · Alle visninger</span></b><span>Fargetema (<i>Color Theme – New UI</i> i fanen Manage Customization Package), logolenke (<i>General</i>-fanen), sidetittel, overskrift på banneret og tekst i søkefeltet (Labels: <code>main.title</code>, <code>nde.landing.header</code>, <code>nui.search.placeholder</code>).</span></div>
+    </div>
+  </section>
+
+
+  <section class="read">
+    <span class="eyebrow">Kilder · Ex Libris Knowledge Center, lest oktober 2026</span>
+    <ul class="sources">
+      <li><a href="https://knowledge.exlibrisgroup.com/Primo/Product_Documentation/020Primo_VE/Primo_VE_(English)/Collaborative_Networks/0400Central_Management_in_Collaborative_Networks" target="_blank" rel="noopener">Central Management in Collaborative Networks</a> (Central Package, arv, forrang)</li>
+      <li><a href="https://knowledge.exlibrisgroup.com/Primo/Product_Documentation/020Primo_VE/Primo_VE_(English)/030Primo_VE_User_Interface/010NDE_UI_Customization_-_Best_Practices" target="_blank" rel="noopener">NDE UI Customization – Best Practices</a> (pakkestruktur, logo, favicon, fargetema)</li>
+      <li><a href="https://knowledge.exlibrisgroup.com/Primo/Product_Documentation/020Primo_VE/Primo_VE_(English)/Go_NDE/Overview_of_the_NDE_Interface_and_Configuration" target="_blank" rel="noopener">Overview of the NDE Interface and Configuration</a> (Landing Page-fanen)</li>
+      <li><a href="https://knowledge.exlibrisgroup.com/Primo/Product_Documentation/020Primo_VE/Primo_VE_(English)/Go_NDE/Customization_Best_Practices" target="_blank" rel="noopener">Go NDE: Customization Best Practices</a> (nivåer av tilpasning, støtte)</li>
+      <li><a href="https://github.com/ExLibrisGroup/customModule" target="_blank" rel="noopener">ExLibrisGroup/customModule</a> (Angular-komponenter, bygging og opplasting)</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+(function(){
+  const LAYERS = {
+    izcfg:"IZ-ens innstillinger i Alma", izpkg:"IZ-ens Customization Package", nz:"Central Package (NZ)", def:"NDE-standard"
+  };
+  const SHORT = {izcfg:"IZ · Alma", izpkg:"IZ-pakke", nz:"Sentral", def:"Standard"};
+  const EL_NAMES = {favicon:"Favicon", topheader:"Header", logo:"Logo", header:"Meny", landing:"Landingsside", heading:"Overskrift i banneret", searchtext:"Tekst i søkefeltet", angular:"Angular-komponenter", css:"CSS", theme:"Fargetema", footer:"Footer"};
+
+  const s = {inherit:true, path:"LP", lBrand:true, pBrand:true, pCss:true, pTheme:false, pHead:false, pFoot:false, pNg:false};
+  let sel = "landing";
+  const $ = id => document.getElementById(id);
+
+  function resolve(el){
+    const LP = s.path==="LP", PKG = s.path==="PKG";
+    const brandLocal = (PKG && s.pBrand) || (LP && s.lBrand);
+    const headLocal = PKG && s.pHead, footLocal = PKG && s.pFoot;
+    switch(el){
+      case "favicon":
+      case "logo": {
+        const isLogo = el==="logo";
+        const file = isLogo ? "assets/images/library-logo.png" : "assets/icons/favicon.ico";
+        if (brandLocal) return {src:["izpkg"], what: isLogo ? "Institusjonens egen logo." : "Institusjonens egen favicon.", file,
+          note: LP ? "På vei A finnes denne lille pakken bare for logo og favicon. Alt annet arves fortsatt eller settes i Alma." : (isLogo ? "Maks 300 × 100 px, PNG, 30 KB eller mindre. Lenkemålet settes i visningens General-fane." : "Må være en ekte .ico-fil.")};
+        if (isLogo && s.inherit) return {src:["nz"], what:"Sikt-logoen fra Central Package.", file:"Central Package › assets/images/library-logo.png", warn:true, warnLabel:"Ikke egen logo. ",
+          note:"Visningen faller tilbake på konsortiets logo. Last opp en pakke med library-logo.png for å vise institusjonens egen."};
+        return {src:["def"], what: isLogo ? "Standardlogoen." : "Standard-faviconet.", file:"(ingen lastet opp)", warn: true,
+          note: LP ? "Landing Page-fanen kan ikke sette logo eller favicon. Last opp en pakke med " + file.split("/").pop() + " for å rette det." : "Pakken inneholder ikke " + file + ". Slå på «Logo og favicon» for å legge den til."};
+      }
+      case "header":
+        return {src:["izcfg"], what:"Menylenkene i toppen.", file:"Configure Views › [view] › Links Menu",
+          note:"Settes per visning i Alma. Arv fra Central Package endrer ikke menyen."};
+      case "topheader": {
+        if (headLocal) return {src:["izpkg"], what:"Institusjonens egen header over menylinja.", file:"assets/header-footer/header.html",
+          note:"Central Package inneholder ingen header, så den kommer bare fra en egen pakke (vei B)."};
+        return {src:["def"], tag:"Ingen", what:"Ingen header. NDE har ingen som standard, og Central Package legger ikke til en.", file:"(ingen)",
+          note: PKG ? "Slå på «Egen header» for å legge header.html i pakken." : "En header krever en egen Customization Package (vei B)."};
+      }
+      case "footer": {
+        if (footLocal) return {src:["izpkg"], what:"Institusjonens egen footer.", file:"assets/header-footer/footer.html",
+          note:"Erstatter den sentrale footeren for denne visningen. Sentrale endringer i footeren når ikke lenger fram."};
+        if (s.inherit) return {src:["nz"], what:"Konsortiets felles footer.", file:"assets/header-footer/footer.html",
+          note:"Oppdateres av konsortiekontoret. Når alle visninger som arver, automatisk."};
+        return {src:["def"], tag:"Ingen", what:"Ingen footer. NDE har ingen som standard.", file:"(ingen)",
+          note:"En footer vises bare når en pakke (sentral eller lokal) inneholder footer.html."};
+      }
+      case "css": {
+        if (PKG && s.pCss) return {src: s.inherit ? ["izpkg","nz"] : ["izpkg"], what: s.inherit ? "Lokal CSS lagt oppå konsortiets CSS." : "Bare lokal CSS.", file:"assets/css/custom.css",
+          note: s.inherit ? "Begge filene gjelder. Der en lokal regel kolliderer med en sentral regel, vinner den lokale. Sentrale CSS-endringer når fortsatt visningen." : "Uten arv gjelder bare den lokale CSS-en."};
+        if (s.inherit) return {src:["nz"], what:"Konsortiets felles CSS.", file:"assets/css/custom.css", note:"Felles stil for alle visninger som arver."};
+        return {src:["def"], what:"Bare NDEs standardstil.", file:"(ingen)", note:""};
+      }
+      case "angular": {
+        const src = [];
+        if (PKG && s.pNg) src.push("izpkg");
+        if (s.inherit) src.push("nz");
+        if (!src.length) return {src:["def"], what:"Ingen egne komponenter, bare NDEs innebygde.", file:"(ingen)", note:"Egne komponenter bygges med customModule og lastes opp i en pakke."};
+        const both = src.length===2;
+        return {src, what: both ? "Konsortiets komponenter og institusjonens egne komponenter." : (src[0]==="nz" ? "Konsortiets felles Angular-komponenter." : "Institusjonens egne Angular-komponenter."),
+          file:"customModule-bygg (ZIP fra dist/)",
+          note: both ? "Begge settene med komponenter kjører side om side, men ikke hvis de bygger på samme element i samme posisjon (before, after, top eller bottom). Avtal med konsortiekontoret hvilke elementer og posisjoner som er i bruk." : (src[0]==="nz" ? "Bygges og vedlikeholdes av konsortiekontoret. Alle visninger som arver, får dem." : "Institusjonen bygger, tester og vedlikeholder disse selv."),
+          verify: both};
+      }
+      case "theme":
+        if (PKG && s.pTheme) return {src:["izpkg"], what:"Institusjonens eget Angular Material-fargetema.", file:"customModule › eget fargetema (i den opplastede pakken)",
+          note:"Overstyrer det ferdige temaet valgt i Alma. Ex Libris anbefaler dette framfor å overstyre fargevariabler i custom.css."};
+        return {src:["izcfg"], what:"Visningens fargetema.", file:"Manage Customization Package › Color Theme – New UI",
+          note:"Velges per visning, ingen pakke nødvendig. Farger også en landingsside satt opp i Landing Page-fanen. Central Package setter bevisst ikke noe fargetema, så hver institusjon velger et av de ferdige temaene i Alma."};
+      case "heading":
+        return {src:["izcfg"], what:"Overskriften i banneret over søkefeltet.", file:"Display Configuration › Labels › Search Tile Labels › nde.landing.header",
+          note:"Alltid en label i Alma, enten visningen bruker Landing Page Configuration eller egen pakke. Én verdi per språk. Standard er «Velkommen til Oria» (engelsk: «Welcome to Oria»)."};
+      case "searchtext":
+        return {src:["izcfg"], what:"Plassholderteksten i søkefeltet.", file:"Display Configuration › Labels › Search Tile Labels › nui.search.placeholder",
+          note:"Alltid en label i Alma, enten visningen bruker Landing Page Configuration eller egen pakke. Én verdi per språk."};
+      case "landing": {
+        if (LP) return {src:["izcfg"], what:"Bygget fra Landing Page-fanen: bakgrunnsbilde, hurtiglenker, kunngjøring, innloggingsboks og «About the library». Overskriften i banneret og teksten i søkefeltet er labels (klikk på dem).",
+          file:"Configure Views › [view] › Landing Page › Enable configuration",
+          note:"«About the library» har tittel, to avsnitt, fire kulepunkter og eget bilde. Flerspråklig via labels. Seksjoner kan slås av og på og sorteres. Bilder opptil 5 MB. Selve layouten er fast."};
+        return {src:["izpkg"], what:"Bygget helt fra pakkens egen HTML og CSS. Layout, innhold og stil bestemmer institusjonen selv.",
+          file:"assets/homepage/homepage_xx.html, homepage.css, homepage_background.*",
+          note:"Overskriften i banneret og teksten i søkefeltet er fortsatt labels i Alma (klikk på dem). Alt annet i dette området kommer fra pakken. Én HTML-fil per språk (homepage_en.html, homepage_nb.html …). Konsortiekontorets startpakke er utgangspunktet."};
+      }
+    }
+  }
+
+  const LANDING_LP = "<span class='lp'><span class='lp-banner'><button type='button' class='region lbl' data-el='heading'><span class='hd'>Velkommen til Oria</span></button><button type='button' class='region lbl lbl-search' data-el='searchtext'><span class='search'>Søk etter bøker, artikler og mer …</span></button></span>" +
+    "<span class='lp-body'><span class='ql'><span>Åpningstider</span><span>Book grupperom</span><span>Spør en bibliotekar</span><span>Fjernlån</span></span>" +
+    "<span class='ann'>Kunngjøring: Redusert åpningstid i semesterferien.</span>" +
+    "<span class='about'><span class='about-text'><b>Hva er Oria?</b><span>Ett søk i bøker, e-bøker, artikler, databaser og mer.</span><span>Logg inn for å:</span><span class='chk'>Reservere og fornye bøker</span><span class='chk'>Lage favorittlister</span><span class='chk'>Se fullstendige søkeresultater</span></span><span class='about-img' aria-hidden='true'></span></span></span></span>";
+  const LANDING_PKG = "<span class='cp'><span class='cp-hero'><span class='cp-text'><span class='cp-kicker'>Universitetsbiblioteket</span><button type='button' class='region lbl' data-el='heading'><span class='cp-h'>Velkommen til Oria</span></button><button type='button' class='region lbl lbl-search' data-el='searchtext'><span class='search'>Søk etter bøker, artikler og mer …</span></button></span>" +
+    "</span>" +
+    "<span class='cp-cols'><span><b>Nyheter</b>Nye juridiske databaser<i>12. okt.</i>Åpningstider i eksamensperioden<i>8. okt.</i></span>" +
+    "<span><b>Åpent i dag</b>08.00–22.00<i>Hovedbiblioteket</i></span>" +
+    "<span><b>Trenger du hjelp?</b>Chat med en bibliotekar<i>Hverdager 09–15</i></span></span></span>";
+
+  function render(){
+    document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.path===s.path));
+    $("optsLP").hidden = s.path!=="LP"; $("optsPKG").hidden = s.path!=="PKG";
+
+    $("landingBox").innerHTML = s.path==="LP" ? LANDING_LP : LANDING_PKG;
+    const res = {};
+    Object.keys(EL_NAMES).forEach(k=>res[k]=resolve(k));
+
+    document.querySelectorAll(".region").forEach(r=>{
+      const k = r.dataset.el, x = res[k];
+      r.className = r.className.replace(/\bc-\w+\b/g,"").replace(/\b(sel|warn)\b/g,"").replace(/\s+/g," ").trim();
+      r.classList.add("c-"+x.src[0]);
+      if (x.warn) r.classList.add("warn");
+      if (k===sel) r.classList.add("sel");
+      r.dataset.tag = (x.warn ? "⚠ " : "") + (x.tag || x.src.map(v=>SHORT[v]).join(" + "));
+      r.setAttribute("aria-label", EL_NAMES[k] + ": " + x.src.map(v=>LAYERS[v]).join(" + "));
+    });
+
+    const brand = res.logo.src[0]==="izpkg";
+    const fav = res.favicon.src[0]==="izpkg", lsrc = res.logo.src[0];
+    $("favIcon").className = "fav " + (fav ? "loc" : "def"); $("favIcon").textContent = fav ? "UB" : "";
+    $("logoBox").className = "logo" + (lsrc==="izpkg" ? " loc" : lsrc==="nz" ? " nzl" : ""); $("logoTxt").textContent = lsrc==="izpkg" ? "Universitetsbiblioteket" : lsrc==="nz" ? "Sikt" : "Standardlogo";
+    $("cssTxt").textContent = res.css.src.length===2 ? "Sentral CSS + lokal CSS (lokal vinner ved konflikt)" : (res.css.src[0]==="nz" ? "Konsortiets CSS" : (res.css.src[0]==="izpkg" ? "Bare lokal CSS" : "NDE-standard"));
+    const ng=[];
+    if (s.inherit) ng.push("<span style='color:var(--nz)'>Konsortiekomponent</span>");
+    if (s.path==="PKG"&&s.pNg) ng.push("<span style='color:var(--izpkg)'>Lokal komponent</span>");
+    if (!ng.length) ng.push("<span>Bare innebygde NDE-elementer</span>");
+    $("ngBox").innerHTML = ng.join("");
+    $("themeTxt").textContent = res.theme.src[0]==="izpkg" ? "Eget Angular Material-tema" : "Ferdig tema, valgt per visning i Alma";
+    $("swatch").innerHTML = (res.theme.src[0]==="izpkg" ? ["#7a3e12","#c26a12","#f3c48d","#fdf1e3"] : ["#4a2f8f","#6b4fbb","#b9a8ea","#f1ecfc"]).map(v=>"<i style='background:"+v+"'></i>").join("");
+    const h = res.topheader.src[0];
+    $("topTxt").textContent = h==="izpkg" ? "Lokal header · f.eks. felles navigasjonslinje for universitetet" : "Ingen header";
+    document.querySelector(".r-top").classList.toggle("none", h==="def");
+    const f = res.footer.src[0];
+    $("footTxt").textContent = f==="nz" ? "Konsortiets footer · Personvern · Tilgjengelighetserklæring · Kontakt" : (f==="izpkg" ? "Lokal footer · institusjonens egne lenker og adresse" : "Ingen footer");
+    document.querySelector(".r-foot").classList.toggle("none", f==="def");
+
+    const x = res[sel], c = x.warn ? "warn" : x.src[0];
+    const insp = $("inspector");
+    insp.className = "panel inspector a-insp c-"+c;
+    insp.innerHTML =
+      "<div class='insp-bar'><svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M4 4l7 17 2.5-7.5L21 11z'/></svg>Hvor det kommer fra</div>" +
+      "<div class='insp-body'>" +
+      "<div class='insp-title'><i class='dot c-"+c+"'></i>"+EL_NAMES[sel]+"</div>" +
+      "<p>"+x.what+"</p>" +
+      "<dl><dt>Kommer fra</dt><dd>"+x.src.map(v=>"<span class='chip c-"+v+"'>"+LAYERS[v]+"</span>").join(" ")+"</dd>" +
+      "<dt>Fil eller innstilling</dt><dd><code>"+x.file+"</code></dd></dl>" +
+      (x.note ? (x.warn ? "<div class='alert c-warn'><b>"+(x.warnLabel || (s.path==="LP" ? "Pakke mangler. " : "Mangler i pakken. "))+"</b>"+x.note+"</div>" : x.verify ? "<div class='alert c-izpkg'><b>Vær obs. </b>"+x.note+"</div>" : "<p style='color:var(--muted);font-size:14px'>"+x.note+"</p>") : "") +
+      "<p style='font-size:12.5px;color:var(--muted)'>Klikk på en annen del av visningen for å sammenligne.</p></div>";
+  }
+  function pick(k){
+    sel = k; render();
+    const insp = $("inspector");
+    insp.classList.remove("flash"); void insp.offsetWidth; insp.classList.add("flash");
+    if (window.matchMedia("(max-width:900px)").matches) insp.scrollIntoView({behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block:"nearest"});
+  }
+
+  document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{s.path=b.dataset.path; sel="landing"; render();}));
+  ["inherit","lBrand","pBrand","pCss","pTheme","pHead","pFoot","pNg"].forEach(id=>{
+    const el = $(id); el.checked = s[id];
+    el.addEventListener("change",()=>{ s[id]=el.checked;
+      sel = {inherit:"angular", lBrand:"logo", pBrand:"logo", pCss:"css", pTheme:"theme", pHead:"topheader", pFoot:"footer", pNg:"angular"}[id]; render(); });
+  });
+  document.addEventListener("click", e=>{ const r = e.target.closest(".region"); if (r) pick(r.dataset.el); });
+  document.addEventListener("keydown", e=>{ const r = e.target.closest && e.target.closest("div.region"); if (r && e.target===r && (e.key==="Enter"||e.key===" ")){ e.preventDefault(); pick(r.dataset.el); } });
+  document.getElementById("outlines").addEventListener("change", e=>document.getElementById("playground").classList.toggle("outlines", e.target.checked));
+  const DEFAULTS = Object.assign({}, s);
+  document.getElementById("pgReset").addEventListener("click", ()=>{
+    Object.assign(s, DEFAULTS);
+    Object.keys(s).forEach(k=>{ const el=document.getElementById(k); if (el && el.type==="checkbox") el.checked = s[k]; });
+    sel = "landing"; render();
+  });
+  render();
+})();
+</script>
+
+</body>
+</html>
