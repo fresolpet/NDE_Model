@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body style="margin:0">
+<title>NDE-tilpasning i tre lag</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: one reading column; three-layer row, then a framed playground (controls + panel | view), then four rules and a recommended start. */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --sunk:#e9edf2; --ink:#16202b; --muted:#566373; --line:#d6dde5;
+  --def:#7d8794; --nz:#2c56cc; --iz:#b8620c; --warn:#c2352b;
+  --theme:#6b4fbb;
+  --f:"Schibsted Grotesk","Helvetica Neue",Arial,sans-serif; --r:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#0e1319;--surface:#161d26;--sunk:#1d2631;--ink:#e5eaf0;--muted:#9ba7b5;--line:#2b3643;--def:#8b96a3;--nz:#7596ff;--iz:#f0a04b;--warn:#ff6e61;color-scheme:dark}
+}
+:root[data-theme="dark"]{--bg:#0e1319;--surface:#161d26;--sunk:#1d2631;--ink:#e5eaf0;--muted:#9ba7b5;--line:#2b3643;--def:#8b96a3;--nz:#7596ff;--iz:#f0a04b;--warn:#ff6e61;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:15px;line-height:1.55}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:20px;padding-block:32px 64px;display:grid;gap:32px}
+h1,h2,h3{margin:0;line-height:1.15;text-wrap:balance}
+h1{font-size:clamp(28px,4vw,42px);font-weight:800;letter-spacing:-.02em}
+h2{font-size:21px;font-weight:700}
+h3{font-size:17px;font-weight:700}
+p{margin:0}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lede{color:var(--muted);font-size:17px;max-width:60ch}
+.c-def{--c:var(--def)} .c-nz{--c:var(--nz)} .c-iz{--c:var(--iz)} .c-warn{--c:var(--warn)}
+.chip{display:inline-flex;align-items:center;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:999px;background:color-mix(in srgb,var(--c) 15%,transparent);color:color-mix(in srgb,var(--c) 78%,var(--ink));white-space:nowrap}
+
+/* three layers */
+.chain{display:grid;gap:12px}
+.chain-row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr);gap:10px}
+.box{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:var(--r);padding:16px 18px;display:grid;gap:4px;align-content:start}
+.box .n{font-size:12px;font-weight:700;color:color-mix(in srgb,var(--c) 80%,var(--ink))}
+.box p{color:var(--muted);font-size:14px}
+.arrow{align-self:center;color:var(--muted);font-size:22px}
+@media (max-width:760px){.chain-row{grid-template-columns:minmax(0,1fr)}.arrow{justify-self:center;transform:rotate(90deg)}}
+.rule{font-weight:600}
+.ex{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;font-size:14px;color:var(--muted)}
+
+/* playground */
+.pg{border:2px solid color-mix(in srgb,var(--nz) 55%,var(--line));border-radius:16px;background:color-mix(in srgb,var(--nz) 6%,var(--bg));padding:18px;display:grid;gap:16px}
+@media (max-width:600px){.pg{padding:12px}}
+.pg-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding-bottom:12px;border-bottom:1px dashed color-mix(in srgb,var(--nz) 40%,var(--line))}
+.badge{background:var(--nz);color:var(--surface);font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:5px 11px;border-radius:999px}
+.pg-head p{color:var(--muted);font-size:14px;flex:1 1 240px}
+.reset{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 12px;border-radius:8px;cursor:pointer}
+.grid{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);grid-template-areas:"ctrl view" "info view";grid-template-rows:auto 1fr;gap:16px;align-items:start}
+.a-ctrl{grid-area:ctrl}.a-view{grid-area:view}.a-info{grid-area:info}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"ctrl" "view" "info"}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:grid;gap:16px}
+.ctl{display:grid;gap:6px}
+.ctl .lbl{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.hint{font-size:13.5px;color:var(--muted)}
+.switch{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:15px;font-weight:600}
+.switch input{position:absolute;opacity:0;width:1px;height:1px}
+.switch .tg{flex:none;width:36px;height:21px;border-radius:999px;background:var(--line);position:relative;transition:background .15s;margin-top:1px}
+.switch .tg::after{content:"";position:absolute;top:3px;left:3px;width:15px;height:15px;border-radius:50%;background:var(--surface);transition:transform .15s}
+.switch input:checked+.tg{background:var(--c)}
+.switch input:checked+.tg::after{transform:translateX(15px)}
+.switch small{display:block;font-weight:400;font-size:13px;color:var(--muted)}
+.part:focus-visible,.switch input:focus-visible+.tg,.reset:focus-visible,.sw:focus-visible{outline:2px solid var(--nz);outline-offset:2px}
+
+.group{display:grid;gap:10px;padding:12px;border-radius:8px;background:color-mix(in srgb,var(--iz) 7%,transparent);border:1px solid color-mix(in srgb,var(--iz) 25%,var(--line))}
+.group .switch{font-size:14px}
+.divider{height:1px;background:var(--line)}
+.note{border-radius:8px;padding:10px 12px;font-size:14px;background:var(--sunk);border:1px solid var(--line)}
+.swatches{display:flex;gap:8px}
+.sw{all:unset;box-sizing:border-box;width:30px;height:30px;border-radius:8px;cursor:pointer;background:var(--s);border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line)}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--ink)}
+.theme-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.theme-row b{font-size:15px}
+.theme-row small{display:block;font-size:13px;color:var(--muted)}
+
+/* mock view */
+.browser{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.bar{display:flex;gap:6px;padding:9px 12px;background:var(--sunk)}
+.bar i{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.part{all:unset;box-sizing:border-box;display:block;position:relative;cursor:pointer;border-radius:8px;outline:2px solid color-mix(in srgb,var(--c) 75%,transparent);outline-offset:-3px;transition:background .15s}
+.part::after{content:attr(data-tag);position:absolute;top:6px;right:8px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--c);color:var(--surface);pointer-events:none}
+.part:hover{background:color-mix(in srgb,var(--c) 6%,transparent)}
+.part.sel{outline:3px solid var(--c);background:color-mix(in srgb,var(--c) 9%,transparent)}
+.p-top{margin:8px 10px 0;width:calc(100% - 20px);padding:10px 100px 10px 14px;font-size:13px;color:var(--surface);background:var(--ink)}
+.p-top.none{background:transparent;color:var(--muted);font-style:italic}
+.head{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.p-logo{padding:8px 122px 8px 10px}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:15px}
+.logo i{width:20px;height:20px;border-radius:5px;background:var(--c)}
+.menu{margin-left:auto;display:flex;gap:14px;font-size:13px;color:var(--theme);font-weight:600;flex-wrap:wrap}
+.p-landing{margin:10px;width:calc(100% - 20px)}
+.p-foot{width:calc(100% - 20px)}
+.p-wide{width:100%}
+.lp-banner{padding:30px 16px;text-align:center;display:grid;gap:12px;justify-items:center;border-radius:6px;background:linear-gradient(135deg,color-mix(in srgb,var(--theme) 26%,var(--surface)),color-mix(in srgb,var(--theme) 7%,var(--surface)))}
+.lp-banner b{font-size:clamp(19px,2.4vw,25px);font-weight:800}
+.search{width:min(420px,100%);height:36px;border-radius:999px;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;padding:0 14px;font-size:13px;color:var(--muted)}
+.ql{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:12px 4px 4px}
+.ql span{border:1px solid color-mix(in srgb,var(--theme) 45%,var(--line));color:color-mix(in srgb,var(--theme) 70%,var(--ink));border-radius:8px;padding:10px 6px;font-size:13px;text-align:center}
+.ql.def span{opacity:.75}
+.cp{display:grid;font-family:Georgia,"Times New Roman",serif}
+.cp-hero{padding:26px 18px;background:var(--ink);color:var(--surface);border-radius:6px 6px 0 0;display:grid;gap:10px}
+.cp-hero b{font-size:clamp(20px,2.6vw,27px)}
+.cp-hero .search{border-radius:4px;border:0;width:100%}
+.cp-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--line);border-top:0;border-radius:0 0 6px 6px}
+.cp-cols span{padding:12px 14px;font-size:13.5px;border-right:1px solid var(--line)}
+.cp-cols span:last-child{border-right:0}
+@media (max-width:520px){.ql,.cp-cols{grid-template-columns:minmax(0,1fr)}.cp-cols span{border-right:0}}
+.p-foot{margin:0 10px 10px;padding:14px 100px 14px 14px;font-size:13px;color:var(--muted);background:var(--sunk)}
+.p-foot.none{background:transparent;font-style:italic}
+.p-wide{margin-top:12px;padding:14px 100px 14px 14px;background:var(--surface);border:1px solid var(--line)}
+.p-wide b{display:block;font-size:14.5px}
+.p-wide span{font-size:13.5px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;background:var(--c)}
+
+/* info panel */
+.info{border:2px solid var(--c);padding:0;gap:0;overflow:hidden}
+.info-bar{padding:9px 16px;background:color-mix(in srgb,var(--c) 14%,var(--surface));font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:color-mix(in srgb,var(--c) 75%,var(--ink))}
+.info-body{padding:16px 18px;display:grid;gap:10px}
+.info-body h3{font-size:23px;font-weight:800}
+.info-body .how{color:var(--muted)}
+.info-body .extra{font-size:13.5px;color:var(--muted)}
+.warnbox{border-radius:8px;padding:10px 12px;font-size:14px;background:color-mix(in srgb,var(--warn) 12%,transparent);border:1px solid color-mix(in srgb,var(--warn) 40%,transparent)}
+
+/* rules */
+.rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:700px){.rules{grid-template-columns:minmax(0,1fr)}}
+.rules div{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:var(--r);padding:14px 16px;display:grid;gap:4px}
+.rules b{font-size:15.5px}
+.rules span{color:var(--muted);font-size:14px}
+.start{background:var(--surface);border:2px solid var(--iz);border-radius:var(--r);padding:16px 18px;display:grid;gap:4px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:10px">
+    <span class="eyebrow">GO NDE · Oria</span>
+    <h1>NDE-tilpasning i tre lag</h1>
+    <p class="lede">Slik får en institusjon sitt eget preg på Oria i NDE.</p>
+  </header>
+
+  <section class="chain" aria-label="De tre lagene">
+    <div class="chain-row">
+      <div class="box c-def"><span class="n">1</span><h3>Clarivate</h3><p>Slik ser NDE ut "Out of the Box".</p></div>
+      <span class="arrow" aria-hidden="true">→</span>
+      <div class="box c-nz"><span class="n">2</span><h3>Sikt</h3><p>Felles BIBSYS-oppsett for alle.</p></div>
+      <span class="arrow" aria-hidden="true">→</span>
+      <div class="box c-iz"><span class="n">3</span><h3>Institusjonen</h3><p>Deres egne tilpasninger.</p></div>
+    </div>
+    <p class="rule">Der to lag påvirker det samme, vinner det høyeste nummeret.</p>
+    <div class="ex"><span>Eksempel, logoen:</span><span class="chip c-def">Clarivate-logo</span><span aria-hidden="true">→</span><span class="chip c-nz">Sikt-logo</span><span aria-hidden="true">→</span><span class="chip c-iz">Institusjonens logo</span></div>
+  </section>
+
+  <section class="pg" aria-label="Interaktiv modell">
+    <div class="pg-head"><span class="badge">Prøv selv</span><p>Velg i panelet, og klikk på en del av siden for å se hvor den kommer fra.</p><button type="button" class="reset" id="reset">↺ Tilbakestill</button></div>
+    <div class="grid">
+      <div class="panel a-ctrl">
+        <label class="switch c-nz"><input type="checkbox" id="inherit"><span class="tg"></span><span>Bruk Sikts felles oppsett<small>«Inherit from Central Package» i Alma. Bør alltid være på.</small></span></label>
+        <div class="divider"></div>
+        <div class="theme-row">
+          <span><b>Fargetema</b><small>Velges i Alma, uten pakke.</small></span>
+          <span class="swatches" role="group" aria-label="Fargetema">
+            <button type="button" class="sw" data-theme-color="#6b4fbb" style="--s:#6b4fbb" aria-label="Lilla" aria-pressed="true"></button>
+            <button type="button" class="sw" data-theme-color="#1f6fb2" style="--s:#1f6fb2" aria-label="Blå" aria-pressed="false"></button>
+            <button type="button" class="sw" data-theme-color="#1d8a5f" style="--s:#1d8a5f" aria-label="Grønn" aria-pressed="false"></button>
+          </span>
+        </div>
+        <div class="divider"></div>
+        <label class="switch c-iz"><input type="checkbox" id="lpc"><span class="tg"></span><span>Landing Page Configuration<small id="lpcHint"></small></span></label>
+        <div class="divider"></div>
+        <div class="ctl">
+          <span class="lbl">Egen Customization Package</span>
+          <p class="hint">Start fra Sikts startpakke.</p>
+          <div class="group">
+            <label class="switch c-iz"><input type="checkbox" id="pLogo"><span class="tg"></span><span>Logo og favicon</span></label>
+            <label class="switch c-iz"><input type="checkbox" id="pHead"><span class="tg"></span><span>Header</span></label>
+            <label class="switch c-iz"><input type="checkbox" id="pHtml"><span class="tg"></span><span>HTML for landingssiden<small id="htmlHint"></small></span></label>
+            <label class="switch c-iz"><input type="checkbox" id="pFoot"><span class="tg"></span><span>Footer</span></label>
+            <label class="switch c-iz"><input type="checkbox" id="pStyle"><span class="tg"></span><span>Eget utseende og funksjoner</span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="a-view">
+        <div class="browser" aria-label="Eksempel på Oria-forside">
+          <div class="bar" aria-hidden="true"><i></i><i></i><i></i></div>
+          <button type="button" class="part p-top" data-el="header"><span id="topTxt"></span></button>
+          <div class="head">
+            <button type="button" class="part p-logo" data-el="logo"><span class="logo"><i></i><span id="logoTxt"></span></span></button>
+            <span class="menu" aria-hidden="true"><span>Søk</span><span>Tidsskrifter</span><span>Min side</span></span>
+          </div>
+          <button type="button" class="part p-landing" data-el="landing"><span id="landingBox" style="display:grid"></span></button>
+          <button type="button" class="part p-foot" data-el="footer"><span id="footTxt"></span></button>
+        </div>
+        <button type="button" class="part p-wide" data-el="wide"><b>Utseende og funksjoner</b><span id="wideTxt"></span></button>
+        <div class="legend"><span class="c-def"><i></i>Clarivate</span><span class="c-nz"><i></i>Sikt</span><span class="c-iz"><i></i>Institusjonen</span></div>
+      </div>
+
+      <div class="panel info a-info" id="info" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section style="display:grid;gap:14px">
+    <h2>Fire ting å vite</h2>
+    <div class="rules">
+      <div class="c-iz"><b>Landing Page Configuration på</b><span>Landingssiden settes opp i Alma, uten kode. HTML for landingssiden i pakken brukes ikke.</span></div>
+      <div class="c-iz"><b>Landing Page Configuration av</b><span>Landingssiden må komme fra HTML i pakken. Ellers vises Clarivates standard.</span></div>
+      <div class="c-warn"><b>Logo og favicon kommer alltid fra pakken</b><span>Også når Landing Page Configuration er på.</span></div>
+      <div class="c-nz"><b>Eget utseende legges oppå Sikts</b><span>Sikts felles oppsett gjelder fortsatt. Der begge setter det samme, vinner institusjonens.</span></div>
+    </div>
+    <div class="start"><b>Anbefalt start</b><span class="hint">Velg fargetema og slå på Landing Page Configuration i Alma. Last opp Sikts startpakke med deres egen logo og favicon, så slipper dere å begynne fra bunnen. Legg til mer i pakken når dere trenger det.</span></div>
+    <p class="hint">Filnavn, innstillinger og fremgangsmåte finner du i dokumentasjonen på <a href="https://dok.unit.no" target="_blank" rel="noopener" style="color:var(--nz)">dok.unit.no</a>.</p>
+  </section>
+</div>
+
+<script>
+(function(){
+  const NAME = {def:"Clarivate", nz:"Sikt", iz:"Institusjonen"};
+  const TITLE = {header:"Header", logo:"Logo og favicon", landing:"Landingssiden", footer:"Footer", wide:"Utseende og funksjoner", theme:"Fargetema"};
+  const PARTS = ["header","logo","landing","footer","wide"];
+  const START = {inherit:false, lpc:false, pLogo:false, pHead:false, pHtml:false, pFoot:false, pStyle:false, theme:"#6b4fbb"};
+  const s = Object.assign({}, START);
+  let sel = "landing";
+  const $ = id => document.getElementById(id);
+  const LABELS = "Overskriften og teksten i søkefeltet endres under Labels i Alma, uansett oppsett.";
+
+  function resolve(el){
+    if (el==="theme") return {src:["iz"], what:"Valgt i Alma for denne visningen.",
+      how:"Ingen pakke nødvendig. Sikt setter bevisst ikke fargetema, så hver institusjon velger selv.", extra:"Fargene brukes blant annet på landingssiden og menyen."};
+    if (el==="header") return s.pHead
+      ? {src:["iz"], what:"Institusjonens egen header over menylinja.", how:"Ligger i pakken. Brukes for eksempel til en felles navigasjonslinje for universitetet."}
+      : {src:["def"], tag:"Ingen", what:"Ingen header.", how:"Verken Clarivate eller Sikt har en header. Institusjonen kan legge til en i pakken."};
+    if (el==="logo"){
+      if (s.pLogo) return {src:["iz"], what:"Institusjonens egen logo og favicon.", how:"Ligger i institusjonens pakke. Logo og favicon kan bare komme derfra."};
+      const src = s.inherit ? "nz" : "def";
+      return {src:[src], warn:true, what: src==="nz" ? "Sikts logo og favicon." : "Clarivates standardlogo og -favicon.",
+        how:"Vil dere ha egen logo og favicon, må pakken inneholde dem. Det gjelder også når Landing Page Configuration er på."};
+    }
+    if (el==="landing"){
+      if (s.lpc) return {src:["iz"], what:"Satt opp i Alma med Landing Page Configuration.",
+        how:"Bilder, hurtiglenker og tekster velges i et skjema. Ingen kode.", extra:LABELS,
+        note: s.pHtml ? "Pakken inneholder HTML for landingssiden, men den brukes ikke så lenge Landing Page Configuration er på." : ""};
+      if (s.pHtml) return {src:["iz"], what:"Bygget med egen HTML i institusjonens pakke.", how:"Full frihet i utformingen, men dere lager og vedlikeholder den selv.", extra:LABELS};
+      return {src:["def"], warn:true, what:"Clarivates standard-landingsside.",
+        how:"Landing Page Configuration er av, og pakken har ingen HTML for landingssiden. Slå på det ene eller legg til det andre.", extra:LABELS};
+    }
+    if (el==="footer"){
+      if (s.pFoot) return {src:["iz"], what:"Institusjonens egen footer.", how:"Ligger i pakken og erstatter Sikts footer for denne visningen."};
+      return s.inherit
+        ? {src:["nz"], what:"Felles footer fra Sikt.", how:"Oppdateres av Sikt for alle. Institusjonen kan lage sin egen i pakken."}
+        : {src:["def"], tag:"Ingen", what:"Ingen footer.", how:"Clarivate har ingen footer som standard."};
+    }
+    if (el==="wide"){
+      const ex = "Fargetemaet velges for seg i Alma.";
+      if (s.inherit && s.pStyle) return {src:["iz","nz"], what:"Sikts felles oppsett, pluss institusjonens egne tillegg.", how:"Gjelder hele visningen. Der begge setter det samme, vinner institusjonens.", extra:ex};
+      if (s.inherit) return {src:["nz"], what:"Felles utseende og funksjoner fra Sikt.", how:"Gjelder hele visningen og oppdateres automatisk.", extra:ex};
+      if (s.pStyle) return {src:["iz"], what:"Bare institusjonens egne.", how:"Uten Sikts felles oppsett må institusjonen lage alt selv.", extra:ex};
+      return {src:["def"], what:"Bare Clarivates standard.", how:"Uten Sikts felles oppsett og uten eget utseende får visningen ingen tilpasninger.", extra:ex};
+    }
+  }
+
+  const LP = "<span class='lp-banner'><b>Velkommen til Oria</b><span class='search'>Søk etter bøker, artikler og mer …</span></span>" +
+             "<span class='ql'><span>Åpningstider</span><span>Spør en bibliotekar</span><span>Søketips</span></span>";
+  const PK = "<span class='cp'><span class='cp-hero'><b>Velkommen til Oria</b><span class='search'>Søk etter bøker, artikler og mer …</span></span>" +
+             "<span class='cp-cols'><span><b>Nyheter</b></span><span><b>Åpent i dag</b></span><span><b>Trenger du hjelp?</b></span></span></span>";
+  const DF = "<span class='lp-banner'><b>Velkommen til Oria</b><span class='search'>Søk etter bøker, artikler og mer …</span></span>" +
+             "<span class='ql def'><span>Opening Hours</span><span>FAQ</span><span>Search Tips</span></span>";
+
+  function render(){
+    ["inherit","lpc","pLogo","pHead","pHtml","pFoot","pStyle"].forEach(k=>{ $(k).checked = s[k]; });
+    document.documentElement.style.setProperty("--theme", s.theme);
+    document.querySelectorAll(".sw").forEach(b=>b.setAttribute("aria-pressed", b.dataset.themeColor===s.theme));
+    $("lpcHint").textContent = s.lpc ? "På: landingssiden settes opp i Alma." : "Av: landingssiden må komme fra HTML i pakken.";
+    $("htmlHint").textContent = s.lpc ? "Brukes ikke mens Landing Page Configuration er på." : "Bygger hele landingssiden.";
+    document.querySelector("label:has(#pHtml)").style.opacity = s.lpc ? ".6" : "1";
+    $("landingBox").innerHTML = s.lpc ? LP : (s.pHtml ? PK : DF);
+    const res = {}; PARTS.forEach(k=>res[k]=resolve(k));
+    document.querySelectorAll(".part").forEach(p=>{
+      const x = res[p.dataset.el];
+      p.classList.remove("c-def","c-nz","c-iz","c-warn","sel");
+      p.classList.add("c-"+(x.warn ? "warn" : x.src[0]));
+      if (p.dataset.el===sel) p.classList.add("sel");
+      p.dataset.tag = (x.warn ? "⚠ " : "") + (x.tag || x.src.map(v=>NAME[v]).join(" + "));
+      p.setAttribute("aria-label", TITLE[p.dataset.el] + ": " + x.src.map(v=>NAME[v]).join(" + "));
+    });
+    const l = res.logo.src[0];
+    $("logoTxt").textContent = l==="iz" ? "Universitetsbiblioteket" : l==="nz" ? "Sikt" : "Clarivate";
+    document.querySelector(".logo i").style.background = "var(--"+l+")";
+    $("topTxt").textContent = s.pHead ? "Universitetet · Studier · Forskning · Om oss" : "Ingen header";
+    document.querySelector(".p-top").classList.toggle("none", !s.pHead);
+    const f = res.footer.src[0];
+    $("footTxt").textContent = f==="iz" ? "Universitetsbiblioteket · Adresse · Kontakt" : f==="nz" ? "Sikt · Personvern · Tilgjengelighet" : "Ingen footer";
+    document.querySelector(".p-foot").classList.toggle("none", f==="def");
+    $("wideTxt").textContent = "Gjelder hele visningen, ikke ett sted på siden.";
+
+    const x = sel==="theme" ? resolve("theme") : res[sel], c = x.warn ? "warn" : x.src[0];
+    const info = $("info"); info.className = "panel info a-info c-"+c;
+    info.innerHTML = "<div class='info-bar'>Hvor det kommer fra</div><div class='info-body'><h3>"+TITLE[sel]+"</h3>" +
+      "<div>"+x.src.map(v=>"<span class='chip c-"+v+"'>"+NAME[v]+"</span>").join(" ")+"</div><p>"+x.what+"</p>" +
+      (x.warn ? "<div class='warnbox'>"+x.how+"</div>" : "<p class='how'>"+x.how+"</p>") +
+      (x.note ? "<div class='note'>"+x.note+"</div>" : "") +
+      (x.extra ? "<p class='extra'>"+x.extra+"</p>" : "") + "</div>";
+  }
+
+  const FOCUS = {inherit:"wide", lpc:"landing", pLogo:"logo", pHead:"header", pHtml:"landing", pFoot:"footer", pStyle:"wide"};
+  Object.keys(FOCUS).forEach(k=>$(k).addEventListener("change", e=>{ s[k]=e.target.checked; sel=FOCUS[k]; render(); }));
+  document.querySelectorAll(".sw").forEach(b=>b.addEventListener("click",()=>{ s.theme=b.dataset.themeColor; sel="theme"; render(); }));
+  document.querySelectorAll(".part").forEach(p=>p.addEventListener("click",()=>{ sel=p.dataset.el; render(); }));
+  $("reset").addEventListener("click",()=>{ Object.assign(s, START); sel="landing"; render(); });
+  render();
+})();
+</script>
+
+</body>
+</html>
