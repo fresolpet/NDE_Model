@@ -82,8 +82,11 @@ p{margin:0}
 
 /* mock view */
 .browser{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
-.bar{display:flex;gap:6px;padding:9px 12px;background:var(--sunk)}
-.bar i{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.bar{display:flex;align-items:flex-end;gap:6px;padding:8px 12px 0;background:var(--sunk)}
+.bar > i{width:10px;height:10px;border-radius:50%;background:var(--line);align-self:center;margin-bottom:8px}
+.part.p-tab{margin-left:10px;display:flex;align-items:center;gap:8px;padding:8px 92px 8px 12px;background:var(--surface);border-radius:8px 8px 0 0;font-size:13px;font-weight:600;max-width:100%}
+.part.p-tab::after{top:50%;transform:translateY(-50%)}
+.fav{width:16px;height:16px;border-radius:4px;flex:none;display:grid;place-items:center;font-size:8px;font-weight:800;color:#fff;background:var(--c)}
 .part{all:unset;box-sizing:border-box;display:block;position:relative;cursor:pointer;border-radius:8px;outline:2px solid color-mix(in srgb,var(--c) 75%,transparent);outline-offset:-3px;transition:background .15s}
 .part::after{content:attr(data-tag);position:absolute;top:6px;right:8px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--c);color:var(--surface);pointer-events:none}
 .part:hover{background:color-mix(in srgb,var(--c) 6%,transparent)}
@@ -191,7 +194,7 @@ p{margin:0}
 
       <div class="a-view">
         <div class="browser" aria-label="Eksempel på Oria-forside">
-          <div class="bar" aria-hidden="true"><i></i><i></i><i></i></div>
+          <div class="bar"><i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i><button type="button" class="part p-tab" data-el="logo"><span class="fav" id="favIcon"></span><span>Oria</span></button></div>
           <button type="button" class="part p-top" data-el="header"><span id="topTxt"></span></button>
           <div class="head">
             <button type="button" class="part p-logo" data-el="logo"><span class="logo"><i></i><span id="logoTxt"></span></span></button>
@@ -294,6 +297,8 @@ p{margin:0}
     const l = res.logo.src[0];
     $("logoTxt").textContent = l==="iz" ? "Universitetsbiblioteket" : l==="nz" ? "Sikt" : "Clarivate";
     document.querySelector(".logo i").style.background = "var(--"+l+")";
+    $("favIcon").style.background = "var(--"+l+")";
+    $("favIcon").textContent = l==="iz" ? "UB" : l==="nz" ? "S" : "C";
     $("topTxt").textContent = s.pHead ? "Universitetet · Studier · Forskning · Om oss" : "Ingen header";
     document.querySelector(".p-top").classList.toggle("none", !s.pHead);
     const f = res.footer.src[0];
